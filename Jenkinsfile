@@ -24,6 +24,10 @@ node("server-status") {
         def target = "/var/www/status.openspaceproject.com/html/usage"
 
         sh(
+          script: "mkdir -p ${target}",
+          label: "Create directory if it does not already exist"
+        );
+        sh(
           script: "rm -rf ${target}/*",
           label: "Remove old files"
         );
