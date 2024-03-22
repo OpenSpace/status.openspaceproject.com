@@ -4,29 +4,34 @@ node("server-status") {
     checkout scm;
   }
 
-  stage("Generate") {
-    sh(
-      script: "npm install",
-      label: "NPM install packages"
-    );
-    sh(
-      script: "node create-graphs.js public https://data.openspaceproject.com/log/data.json",
-      label: "Generate page"
-    )
-  }
-
-  if (env.BRANCH_NAME == "master") {
-    stage("Deploy") {
-      def target = "/var/www/status.openspaceproject.com/html/usage"
-
+  //
+  // Usage graphs
+  //
+  dir("usage") {
+    stage("Generate") {
       sh(
-        script: "rm -rf ${target}/*",
-        label: "Remove old files"
+        script: "npm install",
+        label: "NPM install packages"
       );
       sh(
-        script: "mv public/* ${target}",
-        label: "Deploy files"
-      );
+        script: "node create-graphs.js public https://data.openspaceproject.com/log/data.json",
+        label: "Generate page"
+      )
+    }
+
+    if (env.BRANCH_NAME == "master") {
+      stage("Deploy") {
+        def target = "/var/www/status.openspaceproject.com/html/usage"
+
+        sh(
+          script: "rm -rf ${target}/*",
+          label: "Remove old files"
+        );
+        sh(
+          script: "mv public/* ${target}",
+          label: "Deploy files"
+        );
+      }
     }
   }
   else {
