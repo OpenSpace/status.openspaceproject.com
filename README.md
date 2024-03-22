@@ -1,3 +1,3 @@
 # status.openspaceproject.com
 
-## Updating Status page
+## Usage page

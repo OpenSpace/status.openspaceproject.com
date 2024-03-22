@@ -10,7 +10,7 @@ node("server-status") {
       label: "NPM install packages"
     );
     sh(
-      script: "node generate-graphs.js public https://data.openspaceproject.com/log/data.json",
+      script: "node create-graphs.js public https://data.openspaceproject.com/log/data.json",
       label: "Generate page"
     )
   }
