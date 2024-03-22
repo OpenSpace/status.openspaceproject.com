@@ -34,7 +34,9 @@ node("server-status") {
       }
     }
   }
-  else {
+
+
+  if (env.BRANCH_NAME != "master") {
     echo("Skipping the deployment as we are not working on the 'master' branch")
     currentBuild.result = "NOT_BUILT";
   }
