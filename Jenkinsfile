@@ -17,10 +17,6 @@ node("server-status") {
         script: "node create-graphs.js public https://data.openspaceproject.com/log/data.json",
         label: "Generate page"
       )
-      sh(
-        script: "tsc process_startup_log.ts && mv process_startup_log.js process_startup_log.cjs",
-        label: "Transpile startup process script"
-      );
     }
 
     if (env.BRANCH_NAME == "master") {
