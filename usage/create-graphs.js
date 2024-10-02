@@ -88,20 +88,34 @@ async function createGraphs(targetPath, dataUrl, filterDate) {
     }
     else {
       await request(
-        `https://maps.googleapis.com/maps/api/geocode/json?&address=${place}&key=AIzaSyBBn5PBZQvKaBwBE7tFATmq28dsu-tp43o`,
+        `https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?SingleLine=${place}&category=&outFields=*&forStorage=false&f=json`,
         {},
         (error, res, body) => {
           if (error)  return console.log(error);
 
           if (res.statusCode == 200) {
             const j = JSON.parse(body);
-            if (j.results.length != 1) {
-              j.results.forEach(e => console.log(e.geometry.location));
-              throw `Expected 1 result for geolocation in row ${i}: (${place}), got ${j.results.length}`;
+            let candidate;
+            if (j.candidates.length != 1) {
+              j.candidates = j.candidates.sort((a, b) => b.score - a.score)
+
+              j.candidates.forEach(e => console.log(e.location, e.score));
+              if (j.candidates[0].score < 85) {
+                throw `Expected 1 result for geolocation in row ${i}: (${place}), got ${j.candidates.length}`;
+              }
+              else {
+                candidate = j.candidates[0];
+              }
             }
-            Geolocation[place] = j.results[0].geometry.location;
+            else {
+              candidate = j.candidates[0];
+            }
+            Geolocation[place] = {
+              lat: j.candidates[0].location.x,
+              lng: j.candidates[0].location.y
+            };
             fs.writeFileSync('geolocation.json', JSON.stringify(Geolocation));
-            console.log(place, j.results[0].geometry.location);
+            console.log(place, j.candidates[0].location);
           }
         }
       );
