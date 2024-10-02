@@ -100,7 +100,7 @@ async function createGraphs(targetPath, dataUrl, filterDate) {
               j.candidates = j.candidates.sort((a, b) => b.score - a.score)
 
               j.candidates.forEach(e => console.log(e.location, e.score));
-              if (j.candidates[0].score < 85) {
+              if (j.candidates[0].score < 75) {
                 throw `Expected 1 result for geolocation in row ${i}: (${place}), got ${j.candidates.length}`;
               }
               else {
@@ -111,8 +111,8 @@ async function createGraphs(targetPath, dataUrl, filterDate) {
               candidate = j.candidates[0];
             }
             Geolocation[place] = {
-              lat: j.candidates[0].location.x,
-              lng: j.candidates[0].location.y
+              lat: j.candidates[0].location.y,
+              lng: j.candidates[0].location.x
             };
             fs.writeFileSync('geolocation.json', JSON.stringify(Geolocation));
             console.log(place, j.candidates[0].location);
