@@ -229,16 +229,26 @@ async function createGraphs(targetPath, dataUrl, filterDate) {
   const html = `
   <html>
   <body style="background: #111111">
-    <div id="usage_map_country" style="width: 2048px; height: 1024px;"></div>
     <div id="usage_map_individual" style="width: 2048px; height: 1024px;"></div>
+    <div id="usage_map_country" style="width: 2048px; height: 1024px;"></div>
     <div id="usage_chart_date_box" style="width: 2048px; height: 1024px;"></div>
     <div id="usage_chart_date_box_grouped" style="width: 2048px; height: 1024px;"></div>
     ${versionDivs}
   </body>
 
+  <style>
+    #usage_map_individual { height: 900px; }
+  </style>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""/>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""></script>
+
   <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBBn5PBZQvKaBwBE7tFATmq28dsu-tp43o"></script>
-  <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
   <script type="text/javascript" src="data.js"></script>
   <script type="text/javascript" src="isocountries.js"></script>
   <script type="text/javascript" src="functions.js"></script>
@@ -251,8 +261,8 @@ async function createGraphs(targetPath, dataUrl, filterDate) {
     google.charts.setOnLoadCallback(drawMaps);
 
     function drawMaps() {
-      drawOverviewMap(data.countries, document.getElementById('usage_map_country'), convertCountryCode);
       drawMap(data.places, document.getElementById("usage_map_individual"), false);
+      drawOverviewMap(data.countries, document.getElementById('usage_map_country'), convertCountryCode);
       drawDateChart(data.dates, document.getElementById('usage_chart_date_box'));
 
       let groupedDates = [ data.dates[0] ];

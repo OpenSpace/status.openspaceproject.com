@@ -28,28 +28,20 @@ function drawOverviewMap(data, div, convertCountryCodeFn) {
 }
 
 function drawMap(data, div) {
-  let map = new google.maps.Map(
-    div,
-    { zoom: 2, center: { lat: 0.00, lng: 0.00 } }
-  );
+  let map = L.map("usage_map_individual").setView([0.0, 0.0], 2);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 10,
+    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+  }).addTo(map);
 
   for (let i = 0; i < data.length; i++) {
-    let marker = new google.maps.Marker({
-      position: { lat: data[i][0], lng: data[i][1] },
-      map: map,
-      optimized: true
-    });
-
-    function attachValue(marker, value) {
-      let isClicked = false;
-      marker.addListener("click", () => {
-        if (isClicked)  marker.setLabel(null);
-        else            marker.setLabel(value);
-        isClicked = !isClicked;
-      });
-    }
-
-    attachValue(marker, data[i][2]);
+    L.marker(
+      [data[i][0], data[i][1]],
+      {
+        keyboard: false,
+        title: data[i][2]
+      }
+    ).addTo(map);
   }
 }
 
