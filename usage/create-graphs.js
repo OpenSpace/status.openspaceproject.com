@@ -237,7 +237,7 @@ async function createGraphs(targetPath, dataUrl, filterDate) {
   </body>
 
   <style>
-    #usage_map_individual { height: 900px; }
+    #usage_map_individual { height: 500px; }
   </style>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
