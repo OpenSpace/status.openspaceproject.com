@@ -68,13 +68,13 @@ class Result {
    */
   entries: Entry[];
 };
-let result = new Result();
+const result = new Result();
 
 /**
  * Returns the index for the provided location and adds it to the array if it didn't exist
  * @param place The place that is looked for or added
  * @param region The region/state that is looked for or added
- * @param country The country that is looked for or added 
+ * @param country The country that is looked for or added
  * @returns The index that corresponds to the @param place, @param region, and
  *          @param country in the results location list
  */
@@ -119,10 +119,10 @@ function indexForSystem(system: string): index {
 }
 
 function processFile(file: string) {
-  let content = fs.readFileSync(file, { encoding: 'utf8' }).split('\n');
+  const content = fs.readFileSync(file, { encoding: 'utf8' }).split('\n');
   for (let j = 0; j < content.length; j += 1) {
     if (content[j].length === 0)  continue;
-    let s = content[j].split('\t');
+    const s = content[j].split('\t');
     if (s.length !== 7 && s.length !== 8) {
       throw `Expected 7-8 columns, got ${s.length} in row ${file}[${j}]\n${content[j]}`;
     }
@@ -134,7 +134,7 @@ function processFile(file: string) {
 
     const system = (s.length === 8) ? s[7] : "unknown";
 
-    let e = {} as Entry;
+    const e = {} as Entry;
     e.d = s[0];
     e.v = indexForVersions(s[2]);
     e.l = indexForLocation(s[4], s[5], s[6]);
