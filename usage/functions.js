@@ -1,14 +1,14 @@
 const Colors = [
-  "3366cc",
-  "#dc3912",
-  "#ff9900",
-  "#109618",
-  "#990099",
-  "#0099c6",
-  "#dd4477",
-  "#66aa00",
-  "#b82e2e",
-  "#316395"
+  '3366cc',
+  '#dc3912',
+  '#ff9900',
+  '#109618',
+  '#990099',
+  '#0099c6',
+  '#dd4477',
+  '#66aa00',
+  '#b82e2e',
+  '#316395'
 ];
 
 function drawOverviewMap(data, div, convertCountryCodeFn) {
@@ -16,10 +16,9 @@ function drawOverviewMap(data, div, convertCountryCodeFn) {
     data[i][0] = convertCountryCodeFn(data[i][0]);
   }
 
-
   let dataTable = google.visualization.arrayToDataTable(data);
   let options = {
-    colorAxis: { colors: [ '#ccedff', '#005985' ] },
+    colorAxis: { colors: ['#ccedff', '#005985'] },
     legend: 'none',
     annotations: { style: 'line' }
   };
@@ -28,20 +27,18 @@ function drawOverviewMap(data, div, convertCountryCodeFn) {
 }
 
 function drawMap(data, div) {
-  let map = L.map("usage_map_individual").setView([0.0, 0.0], 2);
+  let map = L.map('usage_map_individual').setView([0.0, 0.0], 2);
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 10,
-    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    attribution:
+      '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
   }).addTo(map);
 
   for (let i = 0; i < data.length; i++) {
-    L.marker(
-      [data[i][0], data[i][1]],
-      {
-        keyboard: false,
-        title: data[i][2]
-      }
-    ).addTo(map);
+    L.marker([data[i][0], data[i][1]], {
+      keyboard: false,
+      title: data[i][2]
+    }).addTo(map);
   }
 }
 
@@ -51,14 +48,14 @@ function drawDateChart(data, div) {
   for (var i = 1; i < data[0].length - 1; i++) {
     dataTable.addColumn('number', data[0][i]);
   }
-  dataTable.addColumn({ type: 'string', role:'annotation' });
+  dataTable.addColumn({ type: 'string', role: 'annotation' });
 
   dataTable.addRows(data.slice(1));
 
   {
     let options = {
       title: 'Usage',
-      bar: { groupWidth: "100%" },
+      bar: { groupWidth: '100%' },
       isStacked: true,
       annotations: { style: 'line' }
     };
@@ -94,19 +91,18 @@ function drawVersionGraph(data, div, version, color) {
 
     const annotation = data[i][data[i].length - 1];
     if (value > 0 || annotation !== null) {
-      dataTable.addRow([ data[i][0], f * 100, annotation]);
-    }
-    else {
-      dataTable.addRow([ data[i][0], 0, annotation]);
+      dataTable.addRow([data[i][0], f * 100, annotation]);
+    } else {
+      dataTable.addRow([data[i][0], 0, annotation]);
     }
   }
 
   {
-    if (version.length == 0)  version = "No version information";
+    if (version.length == 0) version = 'No version information';
 
     let options = {
       title: version,
-      bar: { groupWidth: "100%" },
+      bar: { groupWidth: '100%' },
       isStacked: true,
       annotations: {
         style: 'line'

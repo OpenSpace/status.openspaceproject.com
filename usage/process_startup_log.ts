@@ -17,7 +17,7 @@ interface Location {
    * The country
    */
   c: string;
-};
+}
 
 interface Entry {
   /**
@@ -39,7 +39,7 @@ interface Entry {
    * The index into the 'systems' list of the Result
    */
   s: index;
-};
+}
 
 class Result {
   constructor() {
@@ -67,7 +67,7 @@ class Result {
    * The list of all encountered entries
    */
   entries: Entry[];
-};
+}
 const result = new Result();
 
 /**
@@ -80,10 +80,11 @@ const result = new Result();
  */
 function indexForLocation(place: string, region: string, country: string): index {
   for (let i = 0; i < result.locations.length; i += 1) {
-    const eq = result.locations[i].p === place &&
-               result.locations[i].r === region &&
-               result.locations[i].c === country;
-    if (eq)  return i;
+    const eq =
+      result.locations[i].p === place &&
+      result.locations[i].r === region &&
+      result.locations[i].c === country;
+    if (eq) return i;
   }
 
   result.locations.push({ p: place, r: region, c: country });
@@ -97,7 +98,7 @@ function indexForLocation(place: string, region: string, country: string): index
  */
 function indexForVersions(version: string): index {
   for (let i = 0; i < result.versions.length; i += 1) {
-    if (result.versions[i] === version)  return i;
+    if (result.versions[i] === version) return i;
   }
 
   result.versions.push(version);
@@ -111,7 +112,7 @@ function indexForVersions(version: string): index {
  */
 function indexForSystem(system: string): index {
   for (let i = 0; i < result.systems.length; i += 1) {
-    if (result.systems[i] === system)  return i;
+    if (result.systems[i] === system) return i;
   }
 
   result.systems.push(system);
@@ -121,7 +122,7 @@ function indexForSystem(system: string): index {
 function processFile(file: string) {
   const content = fs.readFileSync(file, { encoding: 'utf8' }).split('\n');
   for (let j = 0; j < content.length; j += 1) {
-    if (content[j].length === 0)  continue;
+    if (content[j].length === 0) continue;
     const s = content[j].split('\t');
     if (s.length !== 7 && s.length !== 8) {
       throw `Expected 7-8 columns, got ${s.length} in row ${file}[${j}]\n${content[j]}`;
@@ -130,16 +131,16 @@ function processFile(file: string) {
     // Sanitize timing
     // Remove the minutes and seconds from the timestamps
     // format:  YY-MM-DD HH:mm:ss.uuuuuu
-    s[0] = s[0].substring(0, "YY-MM-DD HH".length) + ":00:00";
+    s[0] = s[0].substring(0, 'YY-MM-DD HH'.length) + ':00:00';
 
-    const system = (s.length === 8) ? s[7] : "unknown";
+    const system = s.length === 8 ? s[7] : 'unknown';
 
     const e = {} as Entry;
     e.d = s[0];
     e.v = indexForVersions(s[2]);
     e.l = indexForLocation(s[4], s[5], s[6]);
     e.s = indexForSystem(system);
-    result.entries.push(e)
+    result.entries.push(e);
   }
 }
 
@@ -150,7 +151,7 @@ if (process.argv.length < 3) {
 }
 const outputFile = process.argv[2];
 
-fs.readdirSync(process.argv[3]).forEach(file => {
+fs.readdirSync(process.argv[3]).forEach((file) => {
   console.log(`Process ${file}`);
   processFile(process.argv[3] + '/' + file);
 });

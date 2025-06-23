@@ -7,28 +7,28 @@ const Geolocation = JSON.parse(fs.readFileSync('geolocation.json'));
 const Releases = JSON.parse(fs.readFileSync('releases.json'));
 
 function increase(obj, key) {
-  if (key in obj)  obj[key] = obj[key] + 1;
-  else             obj[key] = 1;
+  if (key in obj) obj[key] = obj[key] + 1;
+  else obj[key] = 1;
 }
 
 function simplifyVersion(version) {
-  if (version.includes("&amp;operating_system=")) {
-    version = version.substring(0, version.indexOf("&amp;operating_system="));
+  if (version.includes('&amp;operating_system=')) {
+    version = version.substring(0, version.indexOf('&amp;operating_system='));
   }
 
-  let commit = "";
-  if (version.includes("&amp;commit_hash=")) {
-    commit = version.substring(version.indexOf("&amp;commit_hash="));
+  let commit = '';
+  if (version.includes('&amp;commit_hash=')) {
+    commit = version.substring(version.indexOf('&amp;commit_hash='));
     for (const [version, hash] of Object.entries(Releases.hashes)) {
       if (hash.startsWith(commit)) {
-        version = version.substring(0, version.indexOf("&amp;commit_hash="));
-        commit = "";
+        version = version.substring(0, version.indexOf('&amp;commit_hash='));
+        commit = '';
         break;
       }
     }
 
-    if (commit !== "") {
-      version = "(GitHub)";
+    if (commit !== '') {
+      version = '(GitHub)';
     }
   }
 
@@ -37,14 +37,10 @@ function simplifyVersion(version) {
 
 async function loadData(url) {
   let result;
-  await request(
-    url,
-    {},
-    (error, res, body) => {
-      if (error)  throw console.log(error);
-      if (res.statusCode == 200)  result = JSON.parse(body);
-    }
-  );
+  await request(url, {}, (error, res, body) => {
+    if (error) throw console.log(error);
+    if (res.statusCode == 200) result = JSON.parse(body);
+  });
 
   return result;
 }
@@ -60,7 +56,7 @@ async function createGraphs(targetPath, dataUrl, filterDate) {
     const date = data.entries[i].d;
 
     if (filterDate !== '') {
-      let d = Date.parse("20" + date.substr(0, 8) + 'T' + date.substr(9) + ".000Z");
+      let d = Date.parse('20' + date.substr(0, 8) + 'T' + date.substr(9) + '.000Z');
       if (d < filterDate) {
         continue;
       }
@@ -69,45 +65,40 @@ async function createGraphs(targetPath, dataUrl, filterDate) {
     let version = data.versions[data.entries[i].v];
     version = simplifyVersion(version);
 
-
     const location = data.locations[data.entries[i].l];
 
     const city = location.p;
     const region = location.r;
     const country = location.c;
 
-    if (city.length == 0 || country.length == 0)  continue;
+    if (city.length == 0 || country.length == 0) continue;
     const place = city.trim() + ', ' + region + ', ' + country;
-
 
     let lat = 0.0;
     let lng = 0.0;
     if (place in Geolocation) {
       lat = Geolocation[place].lat;
       lng = Geolocation[place].lng;
-    }
-    else {
+    } else {
       await request(
         `https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?SingleLine=${place}&category=&outFields=*&forStorage=false&f=json`,
         {},
         (error, res, body) => {
-          if (error)  return console.log(error);
+          if (error) return console.log(error);
 
           if (res.statusCode == 200) {
             const j = JSON.parse(body);
             let candidate;
             if (j.candidates.length != 1) {
-              j.candidates = j.candidates.sort((a, b) => b.score - a.score)
+              j.candidates = j.candidates.sort((a, b) => b.score - a.score);
 
-              j.candidates.forEach(e => console.log(e.location, e.score));
+              j.candidates.forEach((e) => console.log(e.location, e.score));
               if (j.candidates[0].score < 75) {
                 throw `Expected 1 result for geolocation in row ${i}: (${place}), got ${j.candidates.length}`;
-              }
-              else {
+              } else {
                 candidate = j.candidates[0];
               }
-            }
-            else {
+            } else {
               candidate = j.candidates[0];
             }
             Geolocation[place] = {
@@ -126,15 +117,13 @@ async function createGraphs(targetPath, dataUrl, filterDate) {
 
     const day = date.substring(0, 8);
     if (day in dates) {
-      if (version in dates[day])  dates[day][version] = dates[day][version] + 1;
-      else                        dates[day][version] = 1
-    }
-    else {
+      if (version in dates[day]) dates[day][version] = dates[day][version] + 1;
+      else dates[day][version] = 1;
+    } else {
       dates[day] = {};
       dates[day][version] = 1;
     }
   }
-
 
   //
   // Serialize the countries data
@@ -148,7 +137,7 @@ async function createGraphs(targetPath, dataUrl, filterDate) {
   let countriesSerialized = `[ ["Country", "Usage"],`;
   for (const [key, value] of Object.entries(countries)) {
     var normalizedValue = value / countriesMax;
-    var v = Math.pow(normalizedValue, 1/4);
+    var v = Math.pow(normalizedValue, 1 / 4);
     countriesSerialized += `["${key}", { "v": ${v}, "f": ${value} } ],`;
   }
   countriesSerialized = countriesSerialized.substring(0, countriesSerialized.length - 1);
@@ -167,7 +156,7 @@ async function createGraphs(targetPath, dataUrl, filterDate) {
   //
   // Serialize the day data
   // Get the list of all versions
-  let versionList = []
+  let versionList = [];
   for (const [key, value] of Object.entries(dates)) {
     for (let [k, v] of Object.entries(value)) {
       k = simplifyVersion(k);
@@ -179,14 +168,12 @@ async function createGraphs(targetPath, dataUrl, filterDate) {
   }
   versionList.sort();
 
-
   let versionsSerialized = '[';
   for (const version in versionList) {
     versionsSerialized += `"${versionList[version]}",`;
   }
   versionsSerialized = versionsSerialized.substring(0, versionsSerialized.length - 1);
   versionsSerialized += ']';
-
 
   for (const [date, version] of Object.entries(Releases.dates)) {
     if (date in dates) {
@@ -202,11 +189,11 @@ async function createGraphs(targetPath, dataUrl, filterDate) {
   for (const [key, value] of Object.entries(dates)) {
     datesSerialized += `[ new Date("20${key}"), `;
     for (const version of versionList) {
-      if (version in value)  datesSerialized += `${value[version]},`;
-      else                   datesSerialized += "0,";
+      if (version in value) datesSerialized += `${value[version]},`;
+      else datesSerialized += '0,';
     }
-    if ('release' in value)  datesSerialized += `"${value['release']}"`;
-    else                     datesSerialized += 'null';
+    if ('release' in value) datesSerialized += `"${value['release']}"`;
+    else datesSerialized += 'null';
     datesSerialized += '],';
   }
   datesSerialized = datesSerialized.substring(0, datesSerialized.length - 1);
@@ -295,18 +282,17 @@ async function createGraphs(targetPath, dataUrl, filterDate) {
   </html>
   `;
 
-  if (!fs.existsSync(targetPath))  fs.mkdirSync(targetPath);
+  if (!fs.existsSync(targetPath)) fs.mkdirSync(targetPath);
   fs.writeFileSync(targetPath + '/index.html', html);
   fs.writeFileSync(targetPath + '/data.js', websiteData);
   fs.copyFileSync('functions.js', targetPath + '/functions.js');
   fs.copyFileSync('isocountries.js', targetPath + '/isocountries.js');
 }
 
-
 //
 // main
 if (process.argv.length != 4 && process.argv.length != 5) {
-  throw `Expected two arguments: First: Target folder. Second: URL to data file`
+  throw `Expected two arguments: First: Target folder. Second: URL to data file`;
 }
 const target = process.argv[2];
 const dataURL = process.argv[3];
