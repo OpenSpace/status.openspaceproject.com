@@ -11,30 +11,6 @@ function increaseCount(obj, key) {
   else obj[key] = 1;
 }
 
-function simplifyVersion(version) {
-  if (version.includes('&amp;operating_system=')) {
-    version = version.substring(0, version.indexOf('&amp;operating_system='));
-  }
-
-  let commit = '';
-  if (version.includes('&amp;commit_hash=')) {
-    commit = version.substring(version.indexOf('&amp;commit_hash='));
-    for (const [version, hash] of Object.entries(Releases.hashes)) {
-      if (hash.startsWith(commit)) {
-        version = version.substring(0, version.indexOf('&amp;commit_hash='));
-        commit = '';
-        break;
-      }
-    }
-
-    if (commit !== '') {
-      version = '(GitHub)';
-    }
-  }
-
-  return version;
-}
-
 async function loadData(url) {
   let result;
   await request(url, {}, (error, res, body) => {
@@ -49,14 +25,16 @@ async function createGraphs(targetPath, dataUrl) {
   const data = await loadData(dataUrl);
 
   let countries = {};
+  let countriesTotal = {};
   let places = {};
+  let placesTotal = {};
   let dates = {};
 
-  for (var i = 0; i < data.entries.length; i += 1) {
+  for (let i = 0; i < data.entries.length; i += 1) {
     const date = data.entries[i].d;
 
-    let version = data.versions[data.entries[i].v];
-    version = simplifyVersion(version);
+    const version = data.versions[data.entries[i].v];
+    console.assert(version !== null);
 
     const location = data.locations[data.entries[i].l];
 
@@ -64,37 +42,29 @@ async function createGraphs(targetPath, dataUrl) {
     const region = location.r;
     const country = location.c;
 
-    if (city.length == 0 || country.length == 0) continue;
+    if (city.length === 0 || country.length === 0) continue;
 
     const place = city.trim() + ', ' + region + ', ' + country;
 
-    let lat = 0.0;
-    let lng = 0.0;
-    if (place in Geolocation) {
-      lat = Geolocation[place].lat;
-      lng = Geolocation[place].lng;
-    } else {
+    if (!(place in Geolocation)) {
       await request(
         `https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?SingleLine=${place}&category=&outFields=*&forStorage=false&f=json`,
         {},
         (error, res, body) => {
           if (error) return console.log(error);
 
-          if (res.statusCode == 200) {
+          if (res.statusCode === 200) {
             const j = JSON.parse(body);
-            let candidate;
-            if (j.candidates.length != 1) {
+            if (j.candidates.length !== 1) {
+              // If we get more than one hit, we want to sort them and pick the best hit
               j.candidates = j.candidates.sort((a, b) => b.score - a.score);
 
               j.candidates.forEach((e) => console.log(e.location, e.score));
               if (j.candidates[0].score < 75) {
                 throw `Expected 1 result for geolocation in row ${i}: (${place}), got ${j.candidates.length}`;
-              } else {
-                candidate = j.candidates[0];
               }
-            } else {
-              candidate = j.candidates[0];
             }
+
             Geolocation[place] = {
               lat: j.candidates[0].location.y,
               lng: j.candidates[0].location.x
@@ -106,33 +76,54 @@ async function createGraphs(targetPath, dataUrl) {
       );
     }
 
-    increaseCount(countries, country);
-    increaseCount(places, place);
+    increaseCount(countriesTotal, country);
+    increaseCount(placesTotal, place);
 
-    const day = date.substring(0, 8);
-    if (day in dates) {
-      if (version in dates[day]) dates[day][version] = dates[day][version] + 1;
-      else dates[day][version] = 1;
+    const monthPart = date.substring(0, "YY-MM".length);
+    if (place in places) {
+      increaseCount(places[place], monthPart);
+    }
+    else {
+      places[place] = {};
+      places[place][monthPart] = 1;
+    }
+    if (country in countries) {
+      increaseCount(countries[country], monthPart);
+    }
+    else {
+      countries[country] = {};
+      countries[country][monthPart] = 1;
+    }
+
+    const dayPart = date.substring(0, "YY-MM-DD".length);
+    if (dayPart in dates) {
+      if (version in dates[dayPart]) dates[dayPart][version] = dates[dayPart][version] + 1;
+      else dates[dayPart][version] = 1;
     } else {
-      dates[day] = {};
-      dates[day][version] = 1;
+      dates[dayPart] = {};
+      dates[dayPart][version] = 1;
     }
   }
 
   //
   // Serialize the countries data
   let countriesMax = 0;
-  for (const [key, value] of Object.entries(countries)) {
+  for (const [key, value] of Object.entries(countriesTotal)) {
     if (value > countriesMax) {
       countriesMax = value;
     }
   }
 
-  let countriesSerialized = `[ ["Country", "Usage"],`;
+  let countriesSerialized = `[ ["Country", "Usage" ],`;
   for (const [key, value] of Object.entries(countries)) {
-    var normalizedValue = value / countriesMax;
-    var v = Math.pow(normalizedValue, 1 / 4);
-    countriesSerialized += `["${key}", { "v": ${v}, "f": ${value} } ],`;
+    let normalizedValue = countriesTotal[key] / countriesMax;
+    let v = Math.pow(normalizedValue, 1 / 4);
+    countriesSerialized += `["${key}", { "v": ${v}, "f": ${countriesTotal[key]}, "d": {`;
+    for (const [time, num] of Object.entries(value)) {
+      countriesSerialized += `"${time}":${num},`;
+    }
+    countriesSerialized = countriesSerialized.substring(0, countriesSerialized.length - 1);
+    countriesSerialized += `}}],`;
   }
   countriesSerialized = countriesSerialized.substring(0, countriesSerialized.length - 1);
   countriesSerialized += `]`;
@@ -142,7 +133,12 @@ async function createGraphs(targetPath, dataUrl) {
   let placesSerialized = `[ `;
   for (const [key, value] of Object.entries(places)) {
     const geo = Geolocation[key];
-    placesSerialized += `[ ${geo.lat}, ${geo.lng}, "${value}"],`;
+    placesSerialized += `{"lat":${geo.lat},"lng":${geo.lng},"total":${placesTotal[key]},"bydate": {`;
+    for (const [time, num] of Object.entries(value)) {
+      placesSerialized += `"${time}":${num},`;
+    }
+    placesSerialized = placesSerialized.substring(0, placesSerialized.length - 1);
+    placesSerialized += '}},';
   }
   placesSerialized = placesSerialized.substring(0, placesSerialized.length - 1);
   placesSerialized += ']';
@@ -153,8 +149,6 @@ async function createGraphs(targetPath, dataUrl) {
   let versionList = [];
   for (const [key, value] of Object.entries(dates)) {
     for (let [k, v] of Object.entries(value)) {
-      k = simplifyVersion(k);
-
       if (!versionList.includes(k)) {
         versionList.push(k);
       }
@@ -203,22 +197,43 @@ async function createGraphs(targetPath, dataUrl) {
   }`;
 
   let versionDivs;
-  for (var i = 0; i < versionList.length; i++) {
-    versionDivs += `<div id="usage_chart_version_${i}" style="width: 2048px; height: 1024px;"></div>\n`;
+  for (let i = 0; i < versionList.length; i++) {
+    versionDivs += `<div id="usage_chart_version_${i}" style="width: 90%; height: 250px; margin: auto;"></div>\n`;
   }
 
   const html = `
   <html>
   <body style="background: #111111">
-    <div id="usage_map_individual" style="width: 2048px; height: 1024px;"></div>
-    <div id="usage_map_country" style="width: 2048px; height: 1024px;"></div>
-    <div id="usage_chart_date_box" style="width: 2048px; height: 1024px;"></div>
-    <div id="usage_chart_date_box_grouped" style="width: 2048px; height: 1024px;"></div>
+    <h1>Usage maps</h1>
+    These maps show the places from where OpenSpace has been started. Note that the individual markers are only an approximation based on the <i>city</i> and does not represent the precise location.
+    <div id="usage_map_individual" style="width: 90%; height: 90%; margin: auto;"></div>
+    <div id="usage_map_country" style="width: 90%; margin: auto;"></div>
+
+    Filter the maps based on the following dates. If a field is empty, no filtering is happening based on that part of the range. Both ends of the range are inclusive and have to be provided in the form "YY-MM". For example:  "Begin 25-02 End 25-02" would show the map how it was in February 2025.
+    <label for="datebegin">Begin Date:</label>
+    <input type="text" id="datebegin" name="datebegin" onchange="updateMap()">
+    <label for="dateend">End Date:</label>
+    <input type="text" id="dateend" name="dateend"onchange="updateMap()">
+
+    <br>
+
+    <h1>Usage charts</h1>
+    <div id="usage_chart_date_box" style="width: 90%; height: 500px; margin: auto;"></div>
+    <div id="usage_chart_date_box_grouped" style="width: 90%; height: 500px; margin: auto;"></div>
+
+    <h1>Versions</h1>
+    These graphs show for each version how large the portion of total starts on the specific day were of the selected version. For example, if the 0.15.0 graph shows 35% for a specific day, 35% of the start-ups were with version 0.15.0 with 65% were of other versions.
     ${versionDivs}
   </body>
 
   <style>
     #usage_map_individual { height: 500px; }
+    * {
+      color: #eeeeee;
+    }
+    input {
+      color: #000000;
+    }
   </style>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -241,14 +256,31 @@ async function createGraphs(targetPath, dataUrl) {
     });
     google.charts.setOnLoadCallback(drawMaps);
 
+    function updateMap() {
+      let begin = document.getElementById('datebegin').value;
+      let end = document.getElementById('dateend').value;
+      drawMap(
+        data.places,
+        begin !== '' ? begin : null,
+        end !== '' ? end : null
+      );
+      drawOverviewMap(data.countries, document.getElementById('usage_map_country'), begin !== '' ? begin : null, end !== '' ? end : null);
+    }
+
     function drawMaps() {
-      drawMap(data.places, document.getElementById("usage_map_individual"), false);
-      drawOverviewMap(data.countries, document.getElementById('usage_map_country'), convertCountryCode);
+      // i=1 since we have a header as the first entry
+      for (let i = 1; i < data.countries.length; i++) {
+        data.countries[i][0] = convertCountryCode(data.countries[i][0]);
+      }
+
+      initializeMap('usage_map_individual');
+      updateMap();
+      drawOverviewMap(data.countries, document.getElementById('usage_map_country'), null, null);
       drawDateChart(data.dates, document.getElementById('usage_chart_date_box'));
 
       let groupedDates = [ data.dates[0] ];
       let dateIterator = "";
-      for (var i = 1; i < data.dates.length; i++) {
+      for (let i = 1; i < data.dates.length; i++) {
         let currentDate = data.dates[i][0].toISOString().substring(0, "YYYY-MM".length);
         if (currentDate === dateIterator) {
           // We have a day of a year-month that we are already processing
@@ -268,7 +300,7 @@ async function createGraphs(targetPath, dataUrl) {
 
       drawDateChart(groupedDates, document.getElementById('usage_chart_date_box_grouped'));
 
-      for (var i = 0; i < data.versions.length; i++) {
+      for (let i = 0; i < data.versions.length; i++) {
         drawVersionGraph(data.dates, document.getElementById(\`usage_chart_version_\${i}\`), data.versions[i], Colors[i]);
       }
     }

@@ -11,12 +11,45 @@ const Colors = [
   '#316395'
 ];
 
-function drawOverviewMap(data, div, convertCountryCodeFn) {
-  for (let i = 1; i < data.length; i++) {
-    data[i][0] = convertCountryCodeFn(data[i][0]);
+function drawOverviewMap(data, div, beginRange, endRange) {
+  let d = [...data];
+  // If we have a provided range, we need to overwrite the 'v' and 'f' values of the data
+  // type to only reflect the selected values
+  if (beginRange !== null || endRange !== null) {
+    let countriesMax = 0;
+    // i=1 since we have a header as the first entry
+    for (let i = 1; i < d.length; i++) {
+      let f = 0.0;
+
+      for (const [date, num] of Object.entries(d[i][1]["d"])) {
+        if (beginRange !== null && date < beginRange) {
+          continue;
+        }
+
+        if (endRange !== null && date > endRange) {
+          continue;
+        }
+
+        f += num;
+      }
+
+      d[i][1]["f"] = f;
+
+      // Collect the biggest number of values
+      if (f > countriesMax) {
+        countriesMax = f;
+      }
+    }
+
+    // Second pass to calculate the colormap value
+    for (let i = 1; i < d.length; i++) {
+      let normalizedValue = d[i][1]["f"] / countriesMax;
+      let v = Math.pow(normalizedValue, 1 / 4);
+      d[i][1]["v"] = v;
+    }
   }
 
-  let dataTable = google.visualization.arrayToDataTable(data);
+  let dataTable = google.visualization.arrayToDataTable(d);
   let options = {
     colorAxis: { colors: ['#ccedff', '#005985'] },
     legend: 'none',
@@ -26,19 +59,52 @@ function drawOverviewMap(data, div, convertCountryCodeFn) {
   chart.draw(dataTable, options);
 }
 
-function drawMap(data, div) {
-  let map = L.map('usage_map_individual').setView([0.0, 0.0], 2);
+let map;
+
+function initializeMap(divName) {
+  map = L.map(divName).setView([0.0, 0.0], 2);
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 10,
+    maxZoom: 12,
     attribution:
       '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
   }).addTo(map);
+}
+
+function drawMap(data, beginRange, endRange) {
+  // Remove old markers if they exist
+  map.eachLayer(function(layer) {
+    if (layer instanceof L.Marker) {
+      map.removeLayer(layer);
+    }
+  });
+
 
   for (let i = 0; i < data.length; i++) {
-    L.marker([data[i][0], data[i][1]], {
-      keyboard: false,
-      title: data[i][2]
-    }).addTo(map);
+    let count = 0;
+    // If no range was specified, we use the total range
+    if (beginRange === null && endRange === null) {
+      count = data[i]["total"];
+    }
+    else {
+      for (const [date, num] of Object.entries(data[i]["bydate"])) {
+        if (beginRange !== null && date < beginRange) {
+          continue;
+        }
+
+        if (endRange !== null && date > endRange) {
+          continue;
+        }
+
+        count += num;
+      }
+    }
+
+    if (count > 0 ) {
+      L.marker([data[i]["lat"], data[i]["lng"]], {
+        keyboard: false,
+        title: count
+      }).addTo(map);
+    }
   }
 }
 
