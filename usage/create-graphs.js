@@ -6,7 +6,7 @@ import request from 'request-promise-native';
 const Geolocation = JSON.parse(fs.readFileSync('geolocation.json'));
 const Releases = JSON.parse(fs.readFileSync('releases.json'));
 
-function increase(obj, key) {
+function increaseCount(obj, key) {
   if (key in obj) obj[key] = obj[key] + 1;
   else obj[key] = 1;
 }
@@ -45,7 +45,7 @@ async function loadData(url) {
   return result;
 }
 
-async function createGraphs(targetPath, dataUrl, filterDate) {
+async function createGraphs(targetPath, dataUrl) {
   const data = await loadData(dataUrl);
 
   let countries = {};
@@ -54,13 +54,6 @@ async function createGraphs(targetPath, dataUrl, filterDate) {
 
   for (var i = 0; i < data.entries.length; i += 1) {
     const date = data.entries[i].d;
-
-    if (filterDate !== '') {
-      let d = Date.parse('20' + date.substr(0, 8) + 'T' + date.substr(9) + '.000Z');
-      if (d < filterDate) {
-        continue;
-      }
-    }
 
     let version = data.versions[data.entries[i].v];
     version = simplifyVersion(version);
@@ -72,6 +65,7 @@ async function createGraphs(targetPath, dataUrl, filterDate) {
     const country = location.c;
 
     if (city.length == 0 || country.length == 0) continue;
+
     const place = city.trim() + ', ' + region + ', ' + country;
 
     let lat = 0.0;
@@ -112,8 +106,8 @@ async function createGraphs(targetPath, dataUrl, filterDate) {
       );
     }
 
-    increase(countries, country);
-    increase(places, place);
+    increaseCount(countries, country);
+    increaseCount(places, place);
 
     const day = date.substring(0, 8);
     if (day in dates) {
@@ -291,15 +285,9 @@ async function createGraphs(targetPath, dataUrl, filterDate) {
 
 //
 // main
-if (process.argv.length != 4 && process.argv.length != 5) {
+if (process.argv.length !== 4) {
   throw `Expected two arguments: First: Target folder. Second: URL to data file`;
 }
 const target = process.argv[2];
 const dataURL = process.argv[3];
-let filterDateBefore = '';
-if (process.argv.length === 5) {
-  filterDateBefore = Date.parse(process.argv[4]);
-  console.log(process.argv[4]);
-  console.log(`Filtering: ${filterDateBefore}`);
-}
-createGraphs(target, dataURL, filterDateBefore);
+createGraphs(target, dataURL);

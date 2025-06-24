@@ -15,7 +15,7 @@
     "request-promise-native": "^1.0.9"
   },
   "devDependencies": {
-    "@types/node": "^17.0.31",
+    "@types/node": "^24.0.3",
     "eslint": "^9.29.0",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-simple-import-sort": "^12.1.1",

@@ -39,6 +39,11 @@ interface Entry {
    * The index into the 'systems' list of the Result
    */
   s: index;
+
+  /**
+   * The index into the 'profiles' list of the Result
+   */
+  p: index;
 }
 
 class Result {
@@ -46,6 +51,7 @@ class Result {
     this.locations = [] as Location[];
     this.versions = [] as string[];
     this.systems = [] as string[];
+    this.profiles = [] as string[];
     this.entries = [] as Entry[];
   }
   /**
@@ -62,6 +68,11 @@ class Result {
    * The list of all encountered systems
    */
   systems: string[];
+
+  /**
+   * The list of all encountered profiles
+   */
+  profiles: string[];
 
   /**
    * The list of all encountered entries
@@ -119,27 +130,50 @@ function indexForSystem(system: string): index {
   return result.systems.length - 1;
 }
 
+/**
+ * Returns the index for the provided profile and adds it to the array if it didn't exist.
+ * @param profile The profile that is looked for or added
+ * @return The index that corresponds to the position in the results profile list
+ */
+function indexForProfile(profile: string): index {
+  for (let i = 0; i < result.profiles.length; i += 1) {
+    if (result.profiles[i] === profile) return i;
+  }
+
+  result.profiles.push(profile);
+  return result.profiles.length - 1;
+}
+
 function processFile(file: string) {
   const content = fs.readFileSync(file, { encoding: 'utf8' }).split('\n');
   for (let j = 0; j < content.length; j += 1) {
     if (content[j].length === 0) continue;
     const s = content[j].split('\t');
-    if (s.length !== 7 && s.length !== 8) {
-      throw `Expected 7-8 columns, got ${s.length} in row ${file}[${j}]\n${content[j]}`;
+    if (s.length < 7 && s.length > 9) {
+      throw `Expected 7-9 columns, got ${s.length} in row ${file}[${j}]\n${content[j]}`;
     }
 
     // Sanitize timing
     // Remove the minutes and seconds from the timestamps
     // format:  YY-MM-DD HH:mm:ss.uuuuuu
-    s[0] = s[0].substring(0, 'YY-MM-DD HH'.length) + ':00:00';
+    const date = s[0].substring(0, 'YY-MM-DD HH'.length) + ':00:00';
+    const version = s[2] || '';
+    const city = s[4] || '';
+    const region = s[5] || '';
+    const country = s[6] || '';
+    const system = s[7] || '';
+    const profile = (s[8] || '').replace("\\", "/");
 
-    const system = s.length === 8 ? s[7] : 'unknown';
+    if (system === "US") {
+      console.log(s);
+    }
 
     const e = {} as Entry;
-    e.d = s[0];
-    e.v = indexForVersions(s[2]);
-    e.l = indexForLocation(s[4], s[5], s[6]);
+    e.d = date;
+    e.v = indexForVersions(version);
+    e.l = indexForLocation(city, region, country);
     e.s = indexForSystem(system);
+    e.p = indexForProfile(profile);
     result.entries.push(e);
   }
 }
