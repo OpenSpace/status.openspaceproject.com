@@ -237,12 +237,12 @@ async function createGraphs(targetPath, dataUrl) {
     }
   }`;
 
-  let versionDivs;
+  let versionDivs = '';
   for (let i = 0; i < versionList.length; i++) {
     versionDivs += `<div id="usage_chart_version_${i}" style="width: 90%; height: 250px; margin: auto;"></div>\n`;
   }
 
-  let profileDivs;
+  let profileDivs = '';
   for (const [version, _] of Object.entries(profiles)) {
     profileDivs += `<div id="usage_chart_profile_${version}" style="width: 90%; height: 400px; margin: auto;"></div>\n`;
   }
@@ -275,7 +275,7 @@ async function createGraphs(targetPath, dataUrl) {
     ${versionDivs}
 
     <h1>Profiles</h1>
-    These graphs show how often each profile was started for each version. Only the fact whether a <i>user-profile</i> was started is collected, so it is not possible to show the names of the individual user-created profiles.
+    These graphs show how often each profile was started for each version. Only the fact whether a <i>user-profile</i> was started is collected, so it is not possible to show the names of the individual user-created profiles. The first graph represents the profiles started by OpenSpace without a fixed version number (versions compiled from scratch).
     ${profileDivs}
   </body>
 
