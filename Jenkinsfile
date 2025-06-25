@@ -21,7 +21,7 @@ node("server-status") {
 
     if (env.BRANCH_NAME == "master") {
       stage("Deploy") {
-        def target = "/var/www/status.openspaceproject.com/html/usage"
+        def target = "/var/www/status.openspaceproject.com/html"
 
         sh(
           script: "mkdir -p ${target}",

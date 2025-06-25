@@ -29,6 +29,7 @@ async function createGraphs(targetPath, dataUrl) {
   let places = {};
   let placesTotal = {};
   let dates = {};
+  let profiles = {};
 
   for (let i = 0; i < data.entries.length; i += 1) {
     const date = data.entries[i].d;
@@ -41,6 +42,7 @@ async function createGraphs(targetPath, dataUrl) {
     const city = location.p;
     const region = location.r;
     const country = location.c;
+    const profile = data.profiles[data.entries[i].p];
 
     if (city.length === 0 || country.length === 0) continue;
 
@@ -78,6 +80,16 @@ async function createGraphs(targetPath, dataUrl) {
 
     increaseCount(countriesTotal, country);
     increaseCount(placesTotal, place);
+
+    if (profile !== '') {
+      if (version in profiles) {
+        increaseCount(profiles[version], profile);
+      }
+      else {
+        profiles[version] = {}
+        profiles[version][profile] = 1;
+      }
+    }
 
     const monthPart = date.substring(0, "YY-MM".length);
     if (place in places) {
@@ -154,7 +166,22 @@ async function createGraphs(targetPath, dataUrl) {
       }
     }
   }
-  versionList.sort();
+  versionList.sort((a, b) => {
+    const [aMajor, aMinor, aPatch] = a.split('.').map(Number);
+    const [bMajor, bMinor, bPatch] = b.split('.').map(Number);
+
+    if (aMajor !== bMajor) {
+      return aMajor - bMajor;
+    } else if (aMinor !== bMinor) {
+      return aMinor - bMinor;
+    } else {
+      return aPatch - bPatch;
+    }
+  });
+  versionList.reverse();
+  let element = versionList[versionList.length - 1];
+  versionList.splice(versionList.length - 1, 1);
+  versionList.splice(0, 0, element);
 
   let versionsSerialized = '[';
   for (const version in versionList) {
@@ -187,18 +214,37 @@ async function createGraphs(targetPath, dataUrl) {
   datesSerialized = datesSerialized.substring(0, datesSerialized.length - 1);
   datesSerialized += ']';
 
+
+  let profilesSerialized = '{';
+  for (const [version, pfs] of Object.entries(profiles)) {
+    profilesSerialized += `"${version}": {`;
+    for (const [profile, count] of Object.entries(pfs)) {
+      profilesSerialized += `"${profile}": ${count},`
+    }
+    profilesSerialized = profilesSerialized.substring(0, profilesSerialized.length - 1);
+    profilesSerialized += '},';
+  }
+  profilesSerialized = profilesSerialized.substring(0, profilesSerialized.length - 1);
+  profilesSerialized += '}'
+
   const websiteData = `{
     data = {
       "versions": ${versionsSerialized},
       "countries": ${countriesSerialized},
       "places": ${placesSerialized},
-      "dates": ${datesSerialized}
+      "dates": ${datesSerialized},
+      "profiles": ${profilesSerialized}
     }
   }`;
 
   let versionDivs;
   for (let i = 0; i < versionList.length; i++) {
     versionDivs += `<div id="usage_chart_version_${i}" style="width: 90%; height: 250px; margin: auto;"></div>\n`;
+  }
+
+  let profileDivs;
+  for (const [version, _] of Object.entries(profiles)) {
+    profileDivs += `<div id="usage_chart_profile_${version}" style="width: 90%; height: 400px; margin: auto;"></div>\n`;
   }
 
   const html = `
@@ -210,6 +256,9 @@ async function createGraphs(targetPath, dataUrl) {
     <div id="usage_map_country" style="width: 90%; margin: auto;"></div>
 
     Filter the maps based on the following dates. If a field is empty, no filtering is happening based on that part of the range. Both ends of the range are inclusive and have to be provided in the form "YY-MM". For example:  "Begin 25-02 End 25-02" would show the map how it was in February 2025.
+
+    <br>
+
     <label for="datebegin">Begin Date:</label>
     <input type="text" id="datebegin" name="datebegin" onchange="updateMap()">
     <label for="dateend">End Date:</label>
@@ -224,6 +273,10 @@ async function createGraphs(targetPath, dataUrl) {
     <h1>Versions</h1>
     These graphs show for each version how large the portion of total starts on the specific day were of the selected version. For example, if the 0.15.0 graph shows 35% for a specific day, 35% of the start-ups were with version 0.15.0 with 65% were of other versions.
     ${versionDivs}
+
+    <h1>Profiles</h1>
+    These graphs show how often each profile was started for each version. Only the fact whether a <i>user-profile</i> was started is collected, so it is not possible to show the names of the individual user-created profiles.
+    ${profileDivs}
   </body>
 
   <style>
@@ -302,6 +355,13 @@ async function createGraphs(targetPath, dataUrl) {
 
       for (let i = 0; i < data.versions.length; i++) {
         drawVersionGraph(data.dates, document.getElementById(\`usage_chart_version_\${i}\`), data.versions[i], Colors[i]);
+      }
+
+      for (const [version, profiles] of Object.entries(data.profiles)) {
+        let d = "usage_chart_profile_" + version;
+        console.log(d);
+        console.log(document.getElementById(d));
+        drawProfileChart(profiles, document.getElementById(d), version)
       }
     }
   </script>

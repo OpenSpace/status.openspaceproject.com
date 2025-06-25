@@ -188,3 +188,17 @@ function drawVersionGraph(data, div, version, color) {
     chart.draw(dataTable, options);
   }
 }
+
+function drawProfileChart(data, div, version) {
+  let arr = [ [ 'Profile', 'Count' ] ];
+  for (const [profile, count] of Object.entries(data)) {
+    arr.push([ profile, count ]);
+  }
+
+  let options = {
+    title: version
+  }
+
+  let chart = new google.visualization.PieChart(div);
+  chart.draw(google.visualization.arrayToDataTable(arr), options);
+}
