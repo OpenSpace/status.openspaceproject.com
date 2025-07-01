@@ -100,10 +100,13 @@ function drawMap(data, beginRange, endRange) {
       }
     }
 
-    if (count > 0 ) {
+    let icon = new L.Icon.Default();
+    icon.options.shadowSize = [0,0];
+    if (count > 0) {
       L.marker([data[i]["lat"], data[i]["lng"]], {
         keyboard: false,
-        title: count
+        title: count,
+        icon: icon
       }).addTo(map);
     }
   }
