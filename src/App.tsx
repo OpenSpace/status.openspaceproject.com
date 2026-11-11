@@ -1,35 +1,119 @@
-import { useCallback, useEffect, useState } from 'react';
+import { lazy, type ReactNode, Suspense, useCallback, useEffect, useState } from 'react';
 
-import { CountryMap } from './components/CountryMap.tsx';
+import { CountryTable } from './components/CountryTable.tsx';
 import { MonthRangeFilter } from './components/MonthRangeFilter.tsx';
-import { ProfileCharts } from './components/ProfileCharts.tsx';
-import { UsageCharts } from './components/UsageCharts.tsx';
+import { Summary } from './components/Summary.tsx';
 import { UsageMap } from './components/UsageMap.tsx';
-import { VersionCharts } from './components/VersionCharts.tsx';
 // The data is generated at build time and emitted as a separate file with a content hash
 // in its name. As it changes only rarely, browsers can keep it cached across visits and
 // across updates of the page itself
 import usageUrl from './generated/usage.json?url';
-import type { UsageData } from './types.ts';
+import { decodeUsage } from './data.ts';
+import type { UsageData, UsageFile } from './types.ts';
 import type { MonthRange } from './util.ts';
+
+// The charts are loaded on demand, so that the page and the usage map can be shown while
+// the charting library is still loading
+const CountryMap = lazy(() =>
+  import('./components/CountryMap.tsx').then((m) => ({ default: m.CountryMap }))
+);
+const UsageCharts = lazy(() =>
+  import('./components/UsageCharts.tsx').then((m) => ({ default: m.UsageCharts }))
+);
+const VersionCharts = lazy(() =>
+  import('./components/VersionCharts.tsx').then((m) => ({ default: m.VersionCharts }))
+);
+const ProfileCharts = lazy(() =>
+  import('./components/ProfileCharts.tsx').then((m) => ({ default: m.ProfileCharts }))
+);
+
+function PageHeader() {
+  return (
+    <header className={'page-header'}>
+      <p className={'page-header__eyebrow'}>OpenSpace Status</p>
+      <h1>OpenSpace Usage</h1>
+    </header>
+  );
+}
+
+/**
+ * A placeholder that is shown while the content is loading
+ */
+function Skeleton({ className, count = 1 }: { className: string; count?: number }) {
+  return Array.from({ length: count }, (_, i) => (
+    <div key={i} className={`skeleton ${className}`} aria-hidden={true} />
+  ));
+}
+
+function LoadingPage() {
+  return (
+    <main aria-busy={true}>
+      <PageHeader />
+      <p className={'visually-hidden'} role={'status'}>
+        Loading the usage data…
+      </p>
+      <section className={'content-section'}>
+        <div className={'summary'}>
+          <Skeleton className={'stat-skeleton'} count={4} />
+        </div>
+      </section>
+      <section className={'content-section'}>
+        <div className={'maps'}>
+          <Skeleton className={'usage-map'} count={2} />
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function ErrorPage({ error, onRetry }: { error: string; onRetry: () => void }) {
+  return (
+    <main>
+      <PageHeader />
+      <section className={'content-section error'} role={'alert'}>
+        <h2>The usage data could not be loaded</h2>
+        <p>
+          This might be a temporary problem with the network or the server. Please try
+          again in a moment.
+        </p>
+        <p className={'error__details'}>{error}</p>
+        <button type={'button'} className={'button'} onClick={onRetry}>
+          Try again
+        </button>
+      </section>
+    </main>
+  );
+}
+
+function Lazy({ fallback, children }: { fallback: ReactNode; children: ReactNode }) {
+  return <Suspense fallback={fallback}>{children}</Suspense>;
+}
 
 export function App() {
   const [data, setData] = useState<UsageData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
   const [range, setRange] = useState<MonthRange>({ begin: null, end: null });
 
   useEffect(() => {
     const controller = new AbortController();
     fetch(usageUrl, { signal: controller.signal })
       .then((res) => {
-        if (!res.ok) throw new Error(`Failed to load the data: ${res.status}`);
-        return res.json() as Promise<UsageData>;
+        if (!res.ok) throw new Error(`Server responded with status ${res.status}`);
+        return res.json() as Promise<UsageFile>;
       })
-      .then(setData)
+      .then((file) => setData(decodeUsage(file)))
       .catch((e: unknown) => {
-        if (!controller.signal.aborted) setError(String(e));
+        if (!controller.signal.aborted) {
+          setError(e instanceof Error ? e.message : String(e));
+        }
       });
     return () => controller.abort();
+  }, [attempt]);
+
+  const retry = useCallback(() => {
+    setError(null);
+    setAttempt((a) => a + 1);
   }, []);
 
   // Only update the range if it actually changed, so that the maps are not redrawn while
@@ -38,18 +122,18 @@ export function App() {
     setRange((prev) => (prev.begin === r.begin && prev.end === r.end ? prev : r));
   }, []);
 
-  if (error !== null) {
-    return <main className={'status'}>{error}</main>;
-  }
-  if (data === null) {
-    return <main className={'status'}>Loading…</main>;
-  }
+  if (error !== null) return <ErrorPage error={error} onRetry={retry} />;
+  if (data === null) return <LoadingPage />;
 
   return (
     <main>
-      <h1>OpenSpace Usage</h1>
+      <PageHeader />
 
-      <section>
+      <section className={'content-section'} aria-label={'Summary'}>
+        <Summary data={data} />
+      </section>
+
+      <section className={'content-section'}>
         <h2>Usage maps</h2>
         <p>
           These maps show the places from where OpenSpace has been started. Note that the
@@ -62,17 +146,29 @@ export function App() {
           example, setting both fields to February 2025 shows the usage in that month
           only.
         </p>
-        <MonthRangeFilter onChange={onRangeChange} />
-        <UsageMap places={data.places} range={range} />
-        <CountryMap countries={data.countries} range={range} />
+        <MonthRangeFilter
+          latestMonth={data.months.at(-1) ?? ''}
+          onChange={onRangeChange}
+        />
+        <div className={'maps'}>
+          <UsageMap places={data.places} range={range} />
+          <Lazy fallback={<Skeleton className={'country-map'} />}>
+            <CountryMap countries={data.countries} range={range} />
+          </Lazy>
+        </div>
+        <CountryTable countries={data.countries} range={range} />
       </section>
 
-      <section>
+      <section className={'content-section'}>
         <h2>Usage charts</h2>
-        <UsageCharts versions={data.versions} days={data.days} />
+        <div className={'chart-stack'}>
+          <Lazy fallback={<Skeleton className={'chart-large'} count={2} />}>
+            <UsageCharts versions={data.versions} days={data.days} />
+          </Lazy>
+        </div>
       </section>
 
-      <section>
+      <section className={'content-section'}>
         <h2>Versions</h2>
         <p>
           These graphs show for each version how large a portion of the total starts on a
@@ -80,10 +176,16 @@ export function App() {
           for a specific day, 35% of the start-ups on that day were with version 0.15.0
           and 65% were with other versions.
         </p>
-        <VersionCharts versions={data.versions} days={data.days} />
+        <div className={'chart-grid'}>
+          <Lazy
+            fallback={<Skeleton className={'chart-small'} count={data.versions.length} />}
+          >
+            <VersionCharts versions={data.versions} days={data.days} />
+          </Lazy>
+        </div>
       </section>
 
-      <section>
+      <section className={'content-section'}>
         <h2>Profiles</h2>
         <p>
           These graphs show how often each profile was started for each version. Only
@@ -92,7 +194,18 @@ export function App() {
           the profiles started by OpenSpace without a fixed version number (versions
           compiled from source).
         </p>
-        <ProfileCharts profiles={data.profiles} />
+        <div className={'chart-grid'}>
+          <Lazy
+            fallback={
+              <Skeleton
+                className={'chart-medium'}
+                count={Object.keys(data.profiles).length}
+              />
+            }
+          >
+            <ProfileCharts profiles={data.profiles} />
+          </Lazy>
+        </div>
       </section>
     </main>
   );

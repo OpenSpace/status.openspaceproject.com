@@ -6,7 +6,7 @@
     "tsBuildInfoFile": "node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "target": "ES2022",
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
-    "types": ["vite/client", "google.visualization"],
+    "types": ["vite/client"],
     "jsx": "react-jsx",
 
     /* The page is bundled by Vite */

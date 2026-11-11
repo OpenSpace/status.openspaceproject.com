@@ -19,7 +19,7 @@ export default tseslint.config(
     files: ['**/*.{ts,tsx}'],
     ignores: ['**/*.d.ts'],
     languageOptions: {
-      ecmaVersion: 2020,
+      ecmaVersion: 'latest',
       globals: globals.browser
     },
     plugins: {
@@ -33,7 +33,6 @@ export default tseslint.config(
       'no-duplicate-imports': 'error', // Imports should be on one line
       'no-console': 'error',
       'prefer-destructuring': ['error', { object: true, array: true }],
-      'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
       'simple-import-sort/imports': [
         'error',

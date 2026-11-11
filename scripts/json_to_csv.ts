@@ -1,23 +1,32 @@
 // Downloads the data.json and converts it into a flat CSV file
+//
+// Usage: node scripts/json_to_csv.ts [output file, defaults to data.csv]
 
 import fs from 'node:fs';
 
+import { csvRow } from './csv.ts';
 import { loadData } from './logdata.ts';
 
+const outputFile = process.argv[2] ?? 'data.csv';
 const data = await loadData();
 
-fs.writeFileSync('data.csv', 'Date, City, Region, Country, Version, Profile, System\n');
-
+const rows = [
+  csvRow(['Date', 'City', 'Region', 'Country', 'Version', 'Profile', 'System'])
+];
 for (const entry of data.entries) {
-  const date = entry.d;
-  const locationObj = data.locations[entry.l];
-  const location = `${locationObj.p.replaceAll(',', ' ')}, ${locationObj.r.replaceAll(',', ' ')}, ${locationObj.c.replaceAll(',', ' ')}`;
-  const version = data.versions[entry.v];
-  const profile = data.profiles[entry.p];
-  const system = data.systems[entry.s];
-
-  fs.appendFileSync(
-    'data.csv',
-    `${date}, ${location}, ${version}, ${profile}, ${system}\n`
+  const location = data.locations[entry.l];
+  rows.push(
+    csvRow([
+      entry.d,
+      location.p,
+      location.r,
+      location.c,
+      data.versions[entry.v],
+      data.profiles[entry.p],
+      data.systems[entry.s]
+    ])
   );
 }
+
+fs.writeFileSync(outputFile, rows.join(''));
+console.log(`Wrote ${data.entries.length} entries to ${outputFile}`);

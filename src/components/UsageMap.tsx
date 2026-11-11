@@ -34,32 +34,38 @@ export function UsageMap({ places, range }: Props) {
   );
 
   return (
-    // Render all markers into a single canvas instead of one DOM element per marker.
-    // With thousands of places this is much faster than individual icon markers
-    <MapContainer center={[20, 0]} zoom={2} preferCanvas className={'usage-map'}>
-      {/* Same dark basemap as the impact map on www.openspaceproject.com */}
-      <TileLayer
-        url={
-          'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'
-        }
-        attribution={
-          '&copy; <a href="https://www.esri.com">Esri</a>, HERE, Garmin, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }
-        maxZoom={16}
-      />
-      {markers.map(({ place, count }) => (
-        <CircleMarker
-          key={`${place.lat},${place.lng}`}
-          center={[place.lat, place.lng]}
-          // Circle size scales logarithmically with the number of launches
-          radius={Math.max(4, Math.min(14, Math.log2(count + 1) * 1.8))}
-          pathOptions={MarkerStyle}
-        >
-          <Popup>
-            <strong>{count.toLocaleString('en')}</strong> launch{count !== 1 ? 'es' : ''}
-          </Popup>
-        </CircleMarker>
-      ))}
-    </MapContainer>
+    <div
+      role={'region'}
+      aria-label={`Map with markers at ${markers.length.toLocaleString('en')} places from where OpenSpace has been started. The table below lists the launches per country`}
+    >
+      {/* Render all markers into a single canvas instead of one DOM element per marker.
+          With thousands of places this is much faster than individual icon markers */}
+      <MapContainer center={[20, 0]} zoom={2} preferCanvas className={'usage-map'}>
+        {/* Same dark basemap as the impact map on www.openspaceproject.com */}
+        <TileLayer
+          url={
+            'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'
+          }
+          attribution={
+            '&copy; <a href="https://www.esri.com">Esri</a>, HERE, Garmin, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          }
+          maxZoom={16}
+        />
+        {markers.map(({ place, count }) => (
+          <CircleMarker
+            key={`${place.lat},${place.lng}`}
+            center={[place.lat, place.lng]}
+            // Circle size scales logarithmically with the number of launches
+            radius={Math.max(4, Math.min(14, Math.log2(count + 1) * 1.8))}
+            pathOptions={MarkerStyle}
+          >
+            <Popup>
+              <strong>{count.toLocaleString('en')}</strong> launch
+              {count !== 1 ? 'es' : ''}
+            </Popup>
+          </CircleMarker>
+        ))}
+      </MapContainer>
+    </div>
   );
 }
