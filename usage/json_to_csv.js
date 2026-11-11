@@ -1,16 +1,11 @@
 // Downloads the data.json and converts it into a flat CSV file
 
 import fs from 'fs';
-import request from 'request-promise-native';
 
 async function loadData(url) {
-  let result;
-  await request(url, {}, (error, res, body) => {
-    if (error) throw console.log(error);
-    if (res.statusCode == 200) result = JSON.parse(body);
-  });
-
-  return result;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to load ${url}: ${res.status}`);
+  return res.json();
 }
 
 let data = await loadData("https://data.openspaceproject.com/log/data.json");

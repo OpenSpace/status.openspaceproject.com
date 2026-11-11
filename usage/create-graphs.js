@@ -1,7 +1,6 @@
 'use strict';
 
 import fs from 'fs';
-import request from 'request-promise-native';
 
 const Geolocation = JSON.parse(fs.readFileSync('geolocation.json'));
 const Releases = JSON.parse(fs.readFileSync('releases.json'));
@@ -12,13 +11,9 @@ function increaseCount(obj, key) {
 }
 
 async function loadData(url) {
-  let result;
-  await request(url, {}, (error, res, body) => {
-    if (error) throw console.log(error);
-    if (res.statusCode == 200) result = JSON.parse(body);
-  });
-
-  return result;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to load ${url}: ${res.status}`);
+  return res.json();
 }
 
 async function createGraphs(targetPath, dataUrl) {
@@ -49,33 +44,31 @@ async function createGraphs(targetPath, dataUrl) {
     const place = city.trim() + ', ' + region + ', ' + country;
 
     if (!(place in Geolocation)) {
-      await request(
-        `https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?SingleLine=${place}&category=&outFields=*&forStorage=false&f=json`,
-        {},
-        (error, res, body) => {
-          if (error) return console.log(error);
+      const res = await fetch(
+        `https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?SingleLine=${encodeURIComponent(place)}&category=&outFields=*&forStorage=false&f=json`
+      );
 
-          if (res.statusCode === 200) {
-            const j = JSON.parse(body);
-            if (j.candidates.length !== 1) {
-              // If we get more than one hit, we want to sort them and pick the best hit
-              j.candidates = j.candidates.sort((a, b) => b.score - a.score);
+      if (res.ok) {
+        const j = await res.json();
+        if (j.candidates.length !== 1) {
+          // If we get more than one hit, we want to sort them and pick the best hit
+          j.candidates = j.candidates.sort((a, b) => b.score - a.score);
 
-              j.candidates.forEach((e) => console.log(e.location, e.score));
-              if (j.candidates[0].score < 75) {
-                throw `Expected 1 result for geolocation in row ${i}: (${place}), got ${j.candidates.length}`;
-              }
-            }
-
-            Geolocation[place] = {
-              lat: j.candidates[0].location.y,
-              lng: j.candidates[0].location.x
-            };
-            fs.writeFileSync('geolocation.json', JSON.stringify(Geolocation));
-            console.log(place, j.candidates[0].location);
+          j.candidates.forEach((e) => console.log(e.location, e.score));
+          if (j.candidates[0].score < 75) {
+            throw `Expected 1 result for geolocation in row ${i}: (${place}), got ${j.candidates.length}`;
           }
         }
-      );
+
+        Geolocation[place] = {
+          lat: j.candidates[0].location.y,
+          lng: j.candidates[0].location.x
+        };
+        fs.writeFileSync('geolocation.json', JSON.stringify(Geolocation));
+        console.log(place, j.candidates[0].location);
+      } else {
+        console.log(`Geocoding failed for ${place}: ${res.status}`);
+      }
     }
 
     increaseCount(countriesTotal, country);
