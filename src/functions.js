@@ -60,25 +60,31 @@ function drawOverviewMap(data, div, beginRange, endRange) {
 }
 
 let map;
+let markerLayer;
 
 function initializeMap(divName) {
-  map = L.map(divName).setView([0.0, 0.0], 2);
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 12,
-    attribution:
-      '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    noWrap: true
+  // Render all vector layers into a single canvas instead of one DOM element per marker.
+  // With thousands of places this is much faster than individual icon markers
+  map = L.map(divName, {
+    center: [20, 0],
+    zoom: 2,
+    preferCanvas: true
+  });
+
+  // Same dark basemap as the impact map on www.openspaceproject.com
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+    attribution: '&copy; <a href="https://www.esri.com">Esri</a>, HERE, Garmin, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 16
   }).addTo(map);
+
+  markerLayer = L.layerGroup().addTo(map);
 }
 
 function drawMap(data, beginRange, endRange) {
   // Remove old markers if they exist
-  map.eachLayer(function(layer) {
-    if (layer instanceof L.Marker) {
-      map.removeLayer(layer);
-    }
-  });
+  markerLayer.clearLayers();
 
+  const accent = '#a2e7fb';
 
   for (let i = 0; i < data.length; i++) {
     let count = 0;
@@ -100,14 +106,20 @@ function drawMap(data, beginRange, endRange) {
       }
     }
 
-    let icon = new L.Icon.Default();
-    icon.options.shadowSize = [0,0];
     if (count > 0) {
-      L.marker([data[i]["lat"], data[i]["lng"]], {
-        keyboard: false,
-        title: count,
-        icon: icon
-      }).addTo(map);
+      // Circle size scales logarithmically with the number of launches
+      const r = Math.max(4, Math.min(14, Math.log2(count + 1) * 1.8));
+      L.circleMarker([data[i]["lat"], data[i]["lng"]], {
+        radius: r,
+        color: accent,
+        fillColor: accent,
+        fillOpacity: 0.45,
+        weight: 1,
+        opacity: 0.75
+      }).addTo(markerLayer).bindPopup(
+        '<strong style="color:#000">' + count + '</strong>' +
+        '<span style="color:#000"> launch' + (count !== 1 ? 'es' : '') + '</span>'
+      );
     }
   }
 }

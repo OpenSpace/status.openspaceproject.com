@@ -2,7 +2,7 @@
   "name": "create-usage-graphs",
   "version": "1.0.0",
   "description": "",
-  "main": "create-graphs.js",
+  "main": "src/create-graphs.js",
   "type": "module",
   "scripts": {
     "lint": "npx prettier . --check & eslint ."

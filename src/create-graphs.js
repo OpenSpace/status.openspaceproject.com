@@ -274,6 +274,7 @@ async function createGraphs(targetPath, dataUrl) {
 
   <style>
     #usage_map_individual { height: 500px; }
+    #usage_map_individual .leaflet-bar a { color: #000000; }
     * {
       color: #eeeeee;
     }
@@ -364,8 +365,8 @@ async function createGraphs(targetPath, dataUrl) {
   if (!fs.existsSync(targetPath)) fs.mkdirSync(targetPath);
   fs.writeFileSync(targetPath + '/index.html', html);
   fs.writeFileSync(targetPath + '/data.js', websiteData);
-  fs.copyFileSync('functions.js', targetPath + '/functions.js');
-  fs.copyFileSync('isocountries.js', targetPath + '/isocountries.js');
+  fs.copyFileSync(new URL('functions.js', import.meta.url), targetPath + '/functions.js');
+  fs.copyFileSync(new URL('isocountries.js', import.meta.url), targetPath + '/isocountries.js');
 }
 
 //

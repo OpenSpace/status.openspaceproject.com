@@ -7,35 +7,33 @@ node("server-status") {
   //
   // Usage graphs
   //
-  dir("usage") {
-    stage("Generate") {
+  stage("Generate") {
+    sh(
+      script: "npm install",
+      label: "NPM install packages"
+    );
+    sh(
+      script: "node src/create-graphs.js public https://data.openspaceproject.com/log/data.json",
+      label: "Generate page"
+    )
+  }
+
+  if (env.BRANCH_NAME == "master") {
+    stage("Deploy") {
+      def target = "/var/www/status.openspaceproject.com/html"
+
       sh(
-        script: "npm install",
-        label: "NPM install packages"
+        script: "mkdir -p ${target}",
+        label: "Create directory if it does not already exist"
       );
       sh(
-        script: "node create-graphs.js public https://data.openspaceproject.com/log/data.json",
-        label: "Generate page"
-      )
-    }
-
-    if (env.BRANCH_NAME == "master") {
-      stage("Deploy") {
-        def target = "/var/www/status.openspaceproject.com/html"
-
-        sh(
-          script: "mkdir -p ${target}",
-          label: "Create directory if it does not already exist"
-        );
-        sh(
-          script: "rm -rf ${target}/*",
-          label: "Remove old files"
-        );
-        sh(
-          script: "mv public/* ${target}",
-          label: "Deploy files"
-        );
-      }
+        script: "rm -rf ${target}/*",
+        label: "Remove old files"
+      );
+      sh(
+        script: "mv public/* ${target}",
+        label: "Deploy files"
+      );
     }
   }
 
