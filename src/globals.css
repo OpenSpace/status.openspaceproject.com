@@ -1,0 +1,102 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #121212;
+  color: #e0e0e0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+}
+
+main {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+main.status {
+  text-align: center;
+  padding-top: 30vh;
+  color: #cccccc;
+}
+
+h1 {
+  font-size: 3rem;
+  color: #ffffff;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+h2 {
+  font-size: 1.8rem;
+  color: #ffffff;
+  margin: 3rem 0 1rem;
+}
+
+p {
+  margin-bottom: 1rem;
+  color: #cccccc;
+}
+
+a {
+  color: #35a5a0;
+}
+
+.filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.filter label {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.filter input,
+.filter button {
+  font: inherit;
+  color: #e0e0e0;
+  background-color: #1e1e1e;
+  border: 1px solid #444444;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  color-scheme: dark;
+}
+
+.filter button:not(:disabled) {
+  cursor: pointer;
+  border-color: #35a5a0;
+}
+
+.filter button:disabled {
+  opacity: 0.5;
+}
+
+.usage-map {
+  height: 500px;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+}
+
+.usage-map .leaflet-popup-content {
+  color: #000000;
+}
+
+.chart-small {
+  height: 250px;
+}
+
+.chart-medium {
+  height: 400px;
+}
+
+.chart-large {
+  height: 500px;
+}

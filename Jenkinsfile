@@ -13,7 +13,7 @@ node("server-status") {
       label: "NPM install packages"
     );
     sh(
-      script: "node src/create-graphs.js public https://data.openspaceproject.com/log/data.json",
+      script: "npm run build",
       label: "Generate page"
     )
   }
@@ -31,7 +31,7 @@ node("server-status") {
         label: "Remove old files"
       );
       sh(
-        script: "mv public/* ${target}",
+        script: "mv dist/* ${target}",
         label: "Deploy files"
       );
     }

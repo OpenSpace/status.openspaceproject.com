@@ -1,5 +1,9 @@
-const convertCountryCode = (code) => {
-  const isoCountries = {
+/**
+ * Converts an ISO 3166-1 alpha-2 country code into the name of the country. If the code
+ * is not known, the code itself is returned instead.
+ */
+export function convertCountryCode(code: string): string {
+  const isoCountries: Record<string, { name: string }> = {
     AF: { name: 'Afghanistan' },
     AX: { name: 'Aland Islands' },
     AL: { name: 'Albania' },
@@ -53,7 +57,7 @@ const convertCountryCode = (code) => {
     CD: { name: 'Congo, Democratic Republic' },
     CK: { name: 'Cook Islands' },
     CR: { name: 'Costa Rica' },
-    CI: { name: "Cote D\'Ivoire" },
+    CI: { name: "Cote D'Ivoire" },
     HR: { name: 'Croatia' },
     CU: { name: 'Cuba' },
     CY: { name: 'Cyprus' },
@@ -118,7 +122,7 @@ const convertCountryCode = (code) => {
     KR: { name: 'Korea' },
     KW: { name: 'Kuwait' },
     KG: { name: 'Kyrgyzstan' },
-    LA: { name: "Lao People\'s Democratic Republic" },
+    LA: { name: "Lao People's Democratic Republic" },
     LV: { name: 'Latvia' },
     LB: { name: 'Lebanon' },
     LS: { name: 'Lesotho' },
@@ -254,4 +258,4 @@ const convertCountryCode = (code) => {
     console.error(`Unknown country code: ${code}`);
     return code;
   }
-};
+}
