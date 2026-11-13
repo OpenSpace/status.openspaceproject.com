@@ -7,6 +7,7 @@ import type { SparseCounts, UsageFile } from '../src/types.ts';
 import { type Geolocations, isValidPlace, placeKey } from './geolocation.ts';
 import { convertCountryCode } from './isocountries.ts';
 import type { LogData } from './logdata.ts';
+import { isAcceptableLocation } from './logparse.ts';
 
 /**
  * Maps a key to the number of times it has been encountered
@@ -68,10 +69,12 @@ function indexMap(list: string[]): Map<string, number> {
 }
 
 /**
- * Aggregates the entries of the raw `data` into the usage file. Places that are not
- * valid or that don't have a position in `geolocations` are left out of the maps, but are
- * still counted for the countries and charts. The returned `missing` set contains the
- * valid places without a position.
+ * Aggregates the entries of the raw `data` into the usage file. Entries without a place,
+ * for example because only the country or no location at all could be determined, and
+ * places that don't have a position in `geolocations` are left out of the maps, but are
+ * still counted for the countries (if known) and charts. Entries with a broken location
+ * are ignored entirely. The returned `missing` set contains the valid places without a
+ * position.
  *
  * @param releases Maps the date of a release in the form "YY-MM-DD" to the version
  */
@@ -97,28 +100,33 @@ export function aggregate(
     const location = data.locations[entry.l];
     const profile = data.profiles[entry.p];
     const system = data.systems[entry.s];
-    if (!isValidPlace(location)) continue;
+    if (!isAcceptableLocation(location.p, location.r, location.c)) continue;
 
     const date = toFullYear(entry.d);
     const month = date.substring(0, 'YYYY-MM'.length);
     const day = date.substring(0, 'YYYY-MM-DD'.length);
 
-    const place = placeKey(location);
-    const position = geolocations[place];
-    if (position !== undefined) {
-      const key = `${position.lat.toFixed(PositionPrecision)},${position.lng.toFixed(PositionPrecision)}`;
-      increaseCount(
-        getOrCreate(places, key, () => new Map()),
-        month
-      );
-    } else {
-      missing.add(place);
+    if (isValidPlace(location)) {
+      const place = placeKey(location);
+      const position = geolocations[place];
+      if (position !== undefined) {
+        const key = `${position.lat.toFixed(PositionPrecision)},${position.lng.toFixed(PositionPrecision)}`;
+        increaseCount(
+          getOrCreate(places, key, () => new Map()),
+          month
+        );
+      } else {
+        missing.add(place);
+      }
     }
 
-    increaseCount(
-      getOrCreate(countries, location.c.trim(), () => new Map()),
-      month
-    );
+    const country = location.c.trim();
+    if (country !== '') {
+      increaseCount(
+        getOrCreate(countries, country, () => new Map()),
+        month
+      );
+    }
     increaseCount(
       getOrCreate(days, day, () => new Map()),
       version

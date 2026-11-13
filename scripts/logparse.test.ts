@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  isAcceptableLocation,
   isValidLocation,
   makeIndexer,
   normalizeProfile,
@@ -94,6 +95,20 @@ describe('isValidLocation', () => {
   });
 });
 
+describe('isAcceptableLocation', () => {
+  it('accepts places, empty locations, and locations with only a country', () => {
+    expect(isAcceptableLocation('Norrköping', '', 'SE')).toBe(true);
+    expect(isAcceptableLocation('', '', '')).toBe(true);
+    expect(isAcceptableLocation('', '', 'US')).toBe(true);
+  });
+
+  it('rejects broken locations', () => {
+    expect(isAcceptableLocation('', '', 'Östergötland')).toBe(false);
+    expect(isAcceptableLocation('', 'Ohio', 'US')).toBe(false);
+    expect(isAcceptableLocation('98ea3486c', 'Norrköping', 'Östergötland')).toBe(false);
+  });
+});
+
 describe('parseLogLine', () => {
   const valid = line(
     '24-06-17 13:45:12.123456',
@@ -129,6 +144,13 @@ describe('parseLogLine', () => {
       line('24-06-17 13:45:12', 'ip', '0.20.0', '', '', '', '')
     );
     expect(result).toMatchObject({ city: '', country: '' });
+  });
+
+  it('accepts lines with only a country', () => {
+    const result = parseLogLine(
+      line('20-05-04 10:00:00', 'ip', '0.15.0', '', '', '', 'SE')
+    );
+    expect(result).toMatchObject({ city: '', region: '', country: 'SE' });
   });
 
   it('accepts lines that end after the commit hash', () => {

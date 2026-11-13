@@ -109,6 +109,18 @@ export function isValidLocation(city: string, region: string, country: string): 
   return ![city, region].some((v) => ForeignContentRegex.test(v));
 }
 
+/**
+ * Returns `true` if the provided location can be stored with an entry. Besides real
+ * places (see `isValidLocation`), these are empty locations and locations for which only
+ * the country could be determined.
+ */
+export function isAcceptableLocation(city: string, region: string, country: string) {
+  if (city.trim() === '' && region.trim() === '') {
+    return country.trim() === '' || CountryCodeRegex.test(country.trim());
+  }
+  return isValidLocation(city, region, country);
+}
+
 export interface LogLine {
   /**
    * The date of the entry in the form `YY-MM-DD HH:00:00`
@@ -144,9 +156,7 @@ export function parseLogLine(line: string): LogLine | { error: string } {
   const city = (s[4] ?? '').trim();
   const region = (s[5] ?? '').trim();
   const country = (s[6] ?? '').trim();
-  // An empty location is valid as the location could not always be determined
-  const hasLocation = city !== '' || region !== '' || country !== '';
-  if (hasLocation && !isValidLocation(city, region, country)) {
+  if (!isAcceptableLocation(city, region, country)) {
     return { error: `Invalid location '${city}', '${region}', '${country}'` };
   }
 
