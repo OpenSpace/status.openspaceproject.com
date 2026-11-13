@@ -63,6 +63,33 @@ export function isPrerelease(version: string): boolean {
 }
 
 /**
+ * The first version in which every start reports the operating system. OpenSpace only
+ * reports the operating system on Windows and sends an empty value on Linux and macOS, so
+ * starts of this or a newer version without an operating system are counted as
+ * `UnknownSystem`. Before this version an empty operating system can also come from builds
+ * that did not report one at all, so these starts are left out
+ */
+const FirstVersionWithSystem = '0.20.0';
+
+/**
+ * The name under which starts without an operating system are counted, see
+ * `FirstVersionWithSystem`
+ */
+export const UnknownSystem = 'Unknown (likely Linux/macOS)';
+
+/**
+ * Returns the operating system under which a start of `version` is counted, or `undefined`
+ * if the start should not be counted
+ */
+export function countedSystem(version: string, system: string): string | undefined {
+  if (system !== '') return system;
+  if (version === '') return undefined;
+  const isNewer =
+    version.localeCompare(FirstVersionWithSystem, 'en', { numeric: true }) >= 0;
+  return isNewer ? UnknownSystem : undefined;
+}
+
+/**
  * Converts the counter into the sparse representation, using the indices of the keys in
  * the provided `keys` list
  */
@@ -108,7 +135,7 @@ export function aggregate(
     const version = data.versions[entry.v];
     const location = data.locations[entry.l];
     const profile = data.profiles[entry.p];
-    const system = data.systems[entry.s];
+    const system = countedSystem(version, data.systems[entry.s]);
     if (!isAcceptableLocation(location.p, location.r, location.c)) continue;
 
     const date = toFullYear(entry.d);
@@ -146,7 +173,7 @@ export function aggregate(
         profile
       );
     }
-    if (system !== '') {
+    if (system !== undefined) {
       increaseCount(
         getOrCreate(systems, version, () => new Map()),
         system

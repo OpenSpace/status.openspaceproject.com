@@ -2,6 +2,7 @@ import { lazy, type ReactNode, Suspense, useCallback, useEffect, useState } from
 
 import { CountryTable } from './components/CountryTable.tsx';
 import { MonthRangeFilter } from './components/MonthRangeFilter.tsx';
+import { type NavSection, SectionNav } from './components/SectionNav.tsx';
 import { Summary } from './components/Summary.tsx';
 import { UsageMap } from './components/UsageMap.tsx';
 // The data is generated at build time and emitted as a separate file with a content hash
@@ -28,6 +29,15 @@ const DistributionCharts = lazy(() =>
     default: m.DistributionCharts
   }))
 );
+
+const Sections: NavSection[] = [
+  { id: 'summary', label: 'Summary' },
+  { id: 'maps', label: 'Usage maps' },
+  { id: 'usage', label: 'Usage charts' },
+  { id: 'versions', label: 'Versions' },
+  { id: 'profiles', label: 'Profiles' },
+  { id: 'systems', label: 'Operating systems' }
+];
 
 function PageHeader() {
   return (
@@ -130,12 +140,13 @@ export function App() {
   return (
     <main>
       <PageHeader />
+      <SectionNav sections={Sections} />
 
-      <section className={'content-section'} aria-label={'Summary'}>
+      <section id={'summary'} className={'content-section'} aria-label={'Summary'}>
         <Summary data={data} />
       </section>
 
-      <section className={'content-section'}>
+      <section id={'maps'} className={'content-section'}>
         <h2>Usage maps</h2>
         <p>
           These maps show the places from where OpenSpace has been started. Note that the
@@ -161,7 +172,7 @@ export function App() {
         <CountryTable countries={data.countries} range={range} />
       </section>
 
-      <section className={'content-section'}>
+      <section id={'usage'} className={'content-section'}>
         <h2>Usage charts</h2>
         <div className={'chart-stack'}>
           <Lazy fallback={<Skeleton className={'chart-large'} count={2} />}>
@@ -170,24 +181,25 @@ export function App() {
         </div>
       </section>
 
-      <section className={'content-section'}>
+      <section id={'versions'} className={'content-section'}>
         <h2>Versions</h2>
         <p>
-          These graphs show for each version how large a portion of the total starts on a
-          specific day were of that version. For example, if the 0.15.0 graph shows 35%
-          for a specific day, 35% of the start-ups on that day were with version 0.15.0
-          and 65% were with other versions.
+          This graph shows for each version how large a portion of the total starts on a
+          specific day were of that version. For example, if the 0.15.0 line shows 35% for
+          a specific day, 35% of the start-ups on that day were with version 0.15.0 and
+          65% were with other versions.
         </p>
-        <div className={'chart-grid'}>
-          <Lazy
-            fallback={<Skeleton className={'chart-small'} count={data.versions.length} />}
-          >
-            <VersionCharts versions={data.versions} days={data.days} />
-          </Lazy>
-        </div>
+        <p>
+          Individual versions can be shown or hidden with the buttons above the graph. The
+          buttons with only a minor version, such as 0.19, show or hide all versions of
+          that minor version at once.
+        </p>
+        <Lazy fallback={<Skeleton className={'chart-large'} />}>
+          <VersionCharts versions={data.versions} days={data.days} />
+        </Lazy>
       </section>
 
-      <section className={'content-section'}>
+      <section id={'profiles'} className={'content-section'}>
         <h2>Profiles</h2>
         <p>
           These graphs show how often each profile was started for each version. Only
@@ -210,12 +222,14 @@ export function App() {
         </div>
       </section>
 
-      <section className={'content-section'}>
+      <section id={'systems'} className={'content-section'}>
         <h2>Operating systems</h2>
         <p>
           These graphs show on which operating systems each version was started. Older
           versions of OpenSpace did not report the operating system, so they are not
-          included.
+          included. OpenSpace currently only reports the operating system on Windows, so
+          starts of version 0.20.0 and newer without an operating system are shown as
+          unknown, which are most likely Linux or macOS.
         </p>
         <div className={'chart-grid'}>
           <Lazy

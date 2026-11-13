@@ -142,6 +142,13 @@ interface Props {
    */
   option: ChartOption;
 
+  /**
+   * If `true`, changes to the `option` are merged into the existing chart instead of
+   * replacing it, which keeps the current zoom. This requires every `option` to contain
+   * the same components and series
+   */
+  merge?: boolean;
+
   className?: string;
 }
 
@@ -151,7 +158,7 @@ interface Props {
  */
 const VisibilityMargin = '400px 0px';
 
-export function EChart({ option, className }: Props) {
+export function EChart({ option, merge = false, className }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [chart, setChart] = useState<ECharts | null>(null);
 
@@ -188,20 +195,20 @@ export function EChart({ option, className }: Props) {
 
     // Let ECharts generate a description of the chart for screen readers
     const fullOption: ChartOption = { aria: { enabled: true }, ...option };
-    chart.setOption(fullOption, { notMerge: true });
+    chart.setOption(fullOption, { notMerge: !merge });
 
     // The text is drawn onto a canvas, which does not update by itself once the web fonts
     // have finished loading, so the chart has to be redrawn at that point
     let cancelled = false;
     if (document.fonts.status !== 'loaded') {
       void document.fonts.ready.then(() => {
-        if (!cancelled) chart.setOption(fullOption, { notMerge: true });
+        if (!cancelled) chart.setOption(fullOption, { notMerge: !merge });
       });
     }
     return () => {
       cancelled = true;
     };
-  }, [chart, option]);
+  }, [chart, option, merge]);
 
   return (
     <div className={'chart-card'}>

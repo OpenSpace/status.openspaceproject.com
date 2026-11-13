@@ -42,7 +42,9 @@
   --font-weight-bold: 700;
 
   /* Layout */
-  --layout-section-padding: 2rem 3vw 3rem;
+  --layout-side-padding: 15%;
+  --layout-section-padding: 2rem var(--layout-side-padding) 3rem;
+  --layout-nav-height: 3rem;
   --layout-border-radius: 12px;
   --layout-border-radius-small: 6px;
   --animation-duration-fast: 0.15s;
@@ -58,6 +60,20 @@
 
 html {
   overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* The side padding would leave too little room for the content on narrow screens */
+@media (max-width: 900px) {
+  :root {
+    --layout-side-padding: 3vw;
+  }
 }
 
 body {
@@ -86,7 +102,7 @@ strong {
  * Page header
  */
 .page-header {
-  padding: 3rem 3vw 2rem;
+  padding: 3rem var(--layout-side-padding) 2rem;
   border-bottom: 1px solid var(--color-border-faint);
 }
 
@@ -109,10 +125,63 @@ strong {
 }
 
 /*
+ * Section navigation
+ */
+.section-nav {
+  position: sticky;
+  top: 0;
+  /* Above the Leaflet controls, which use a z-index of 1000 */
+  z-index: 1100;
+  padding: 0 var(--layout-side-padding);
+  background: rgba(10, 10, 10, 0.85);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--color-border-faint);
+}
+
+.section-nav ul {
+  display: flex;
+  gap: 0.25rem;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.section-nav a {
+  display: block;
+  height: var(--layout-nav-height);
+  line-height: var(--layout-nav-height);
+  padding: 0 0.75rem;
+  white-space: nowrap;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-demibold);
+  color: var(--color-text-light);
+  border-bottom: 2px solid transparent;
+  transition:
+    color var(--animation-duration-fast) ease,
+    border-color var(--animation-duration-fast) ease;
+}
+
+.section-nav a:hover {
+  color: var(--color-text-highlight);
+  text-decoration: none;
+}
+
+.section-nav a[aria-current='location'] {
+  color: var(--color-text-highlight);
+  border-bottom-color: var(--color-accent-primary);
+}
+
+.section-nav a:focus-visible {
+  outline: 2px solid var(--color-accent-primary);
+  outline-offset: -2px;
+}
+
+/*
  * Content sections that alternate their background like on the main website
  */
 .content-section {
   padding: var(--layout-section-padding);
+  scroll-margin-top: var(--layout-nav-height);
   border-bottom: 1px solid var(--color-border-faint);
   background: var(--color-background);
 }
@@ -351,6 +420,109 @@ strong {
 .chart-large {
   height: 60vh;
   min-height: 450px;
+}
+
+/*
+ * Version chart
+ */
+.version-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.version-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  font-size: var(--font-size-sm);
+}
+
+.version-toggles__all,
+.version-toggles__group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.version-toggles__all {
+  flex-basis: 100%;
+}
+
+.version-toggles button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font: inherit;
+  font-family: var(--font-monospace);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-light);
+  background: transparent;
+  border: 1px solid var(--color-overlay-light-faint);
+  border-radius: var(--layout-border-radius-small);
+  padding: 0.25rem 0.6rem;
+  cursor: pointer;
+  transition:
+    background var(--animation-duration-fast) ease,
+    border-color var(--animation-duration-fast) ease,
+    color var(--animation-duration-fast) ease;
+}
+
+.version-toggles__all button {
+  font-family: var(--font-body);
+  font-weight: var(--font-weight-demibold);
+}
+
+.version-toggles button:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.version-toggles button:not(:disabled):hover {
+  background: var(--color-overlay-light-faint);
+  color: #ffffff;
+}
+
+.version-toggles button:focus-visible {
+  outline: 2px solid var(--color-accent-primary);
+  outline-offset: 2px;
+}
+
+.version-toggles button[aria-pressed='true'] {
+  color: var(--color-text-highlight);
+  border-color: var(--color-overlay-light);
+}
+
+.version-toggles__minor {
+  font-weight: var(--font-weight-bold);
+}
+
+.version-toggles__minor[aria-pressed='true'] {
+  background: rgba(61, 189, 238, 0.15);
+}
+
+.version-toggles__minor[aria-pressed='true'],
+.version-toggles__minor[aria-pressed='mixed'] {
+  border-color: var(--color-accent-primary) !important;
+}
+
+.version-toggles__minor[aria-pressed='mixed'] {
+  border-style: dashed;
+  color: var(--color-text);
+}
+
+.version-toggles__swatch {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+}
+
+.version-toggles__version[aria-pressed='false'] {
+  text-decoration: line-through;
+}
+
+.version-toggles__version[aria-pressed='false'] .version-toggles__swatch {
+  opacity: 0.25;
 }
 
 /*

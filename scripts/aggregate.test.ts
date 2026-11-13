@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { aggregate, isPrerelease, sortVersions, toFullYear } from './aggregate.ts';
+import {
+  aggregate,
+  countedSystem,
+  isPrerelease,
+  sortVersions,
+  toFullYear,
+  UnknownSystem
+} from './aggregate.ts';
 import type { LogData } from './logdata.ts';
 
 describe('toFullYear', () => {
@@ -108,8 +115,28 @@ describe('aggregate', () => {
   it('counts the operating systems per version', () => {
     expect(usage.systems).toEqual({
       '': { macOS: 1 },
+      '0.21.0': { [UnknownSystem]: 1 },
       '0.20.0': { 'Windows 10/11': 1 }
     });
+  });
+});
+
+describe('countedSystem', () => {
+  it('keeps reported operating systems', () => {
+    expect(countedSystem('0.19.0', 'Windows 10/11')).toBe('Windows 10/11');
+    expect(countedSystem('', 'macOS')).toBe('macOS');
+  });
+
+  it('counts missing operating systems of newer versions as unknown', () => {
+    expect(countedSystem('0.20.0', '')).toBe(UnknownSystem);
+    expect(countedSystem('0.22.1', '')).toBe(UnknownSystem);
+    expect(countedSystem('0.100.0', '')).toBe(UnknownSystem);
+  });
+
+  it('ignores missing operating systems of older and unversioned builds', () => {
+    expect(countedSystem('0.19.2', '')).toBeUndefined();
+    expect(countedSystem('0.9.0', '')).toBeUndefined();
+    expect(countedSystem('', '')).toBeUndefined();
   });
 });
 
