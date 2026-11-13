@@ -129,12 +129,13 @@ export interface LogLine {
  * The columns of a line are separated by tabs and are: timestamp, IP address, version,
  * commit hash, city, region, country, and optionally the operating system and the
  * profile. Some older entries for which the location could not be determined end after
- * the commit hash instead of containing empty location columns.
+ * the commit hash, or after the version for builds that did not report a commit hash,
+ * instead of containing empty location columns.
  */
 export function parseLogLine(line: string): LogLine | { error: string } {
   const s = line.split('\t');
-  if (s.length !== 4 && (s.length < 7 || s.length > 9)) {
-    return { error: `Expected 4 or 7-9 columns, got ${s.length}` };
+  if (s.length < 3 || s.length === 5 || s.length === 6 || s.length > 9) {
+    return { error: `Expected 3, 4, or 7-9 columns, got ${s.length}` };
   }
   if (!TimestampRegex.test(s[0])) {
     return { error: `Invalid timestamp '${s[0]}'` };

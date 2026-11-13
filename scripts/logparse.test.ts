@@ -145,11 +145,25 @@ describe('parseLogLine', () => {
     });
   });
 
+  it('accepts lines that end after the version', () => {
+    expect(
+      parseLogLine(line('22-02-22 11:48:33.131486', '10.245.0.0', '0.17.1'))
+    ).toEqual({
+      date: '22-02-22 11:00:00',
+      version: '0.17.1',
+      city: '',
+      region: '',
+      country: '',
+      system: '',
+      profile: ''
+    });
+  });
+
   it('rejects lines with too few or too many columns', () => {
     expect(parseLogLine(line('24-06-17 13:45:12', 'ip'))).toHaveProperty('error');
-    expect(parseLogLine(line('24-06-17 13:45:12', 'ip', '0.20.0'))).toHaveProperty(
-      'error'
-    );
+    expect(
+      parseLogLine(line('24-06-17 13:45:12', 'ip', '0.20.0', 'hash', 'city', 'region'))
+    ).toHaveProperty('error');
     expect(
       parseLogLine(line('24-06-17 13:45:12', 'ip', '0.20.0', 'hash', 'city'))
     ).toHaveProperty('error');
