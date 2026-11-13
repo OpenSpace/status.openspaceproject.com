@@ -54,6 +54,15 @@ export function sortVersions(versions: Iterable<string>): string[] {
 }
 
 /**
+ * Returns whether the `version` is a prerelease, which is marked by a minor version of -1,
+ * for example "0.18.-1". Prereleases are shown in the usage charts, but don't get a release
+ * marker and are not part of the per-version distributions
+ */
+export function isPrerelease(version: string): boolean {
+  return version.split('.')[2] === '-1';
+}
+
+/**
  * Converts the counter into the sparse representation, using the indices of the keys in
  * the provided `keys` list
  */
@@ -159,7 +168,7 @@ export function aggregate(
   const perVersion = (counters: Map<string, Counter>) =>
     Object.fromEntries(
       versions
-        .filter((v) => counters.has(v))
+        .filter((v) => counters.has(v) && !isPrerelease(v))
         .map((v) => [v, Object.fromEntries(counters.get(v) ?? [])])
     );
 
@@ -186,7 +195,7 @@ export function aggregate(
     releases: Object.fromEntries(
       Object.entries(releases)
         .map(([date, version]) => [toFullYear(date), version])
-        .filter(([date]) => days.has(date))
+        .filter(([date, version]) => days.has(date) && !isPrerelease(version))
     ),
     profiles: perVersion(profiles),
     systems: perVersion(systems)

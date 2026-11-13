@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { aggregate, sortVersions, toFullYear } from './aggregate.ts';
+import { aggregate, isPrerelease, sortVersions, toFullYear } from './aggregate.ts';
 import type { LogData } from './logdata.ts';
 
 describe('toFullYear', () => {
@@ -18,6 +18,15 @@ describe('sortVersions', () => {
       '0.10.0',
       '0.9.0'
     ]);
+  });
+});
+
+describe('isPrerelease', () => {
+  it('detects a minor version of -1', () => {
+    expect(isPrerelease('0.18.-1')).toBe(true);
+    expect(isPrerelease('0.18.0')).toBe(false);
+    expect(isPrerelease('0.18.1')).toBe(false);
+    expect(isPrerelease('')).toBe(false);
   });
 });
 
@@ -101,5 +110,36 @@ describe('aggregate', () => {
       '': { macOS: 1 },
       '0.20.0': { 'Windows 10/11': 1 }
     });
+  });
+});
+
+describe('aggregate with prereleases', () => {
+  const data: LogData = {
+    locations: [{ p: 'Linköping', r: 'Östergötland', c: 'SE' }],
+    versions: ['0.20.-1', '0.20.0'],
+    systems: ['Windows 10/11'],
+    profiles: ['default'],
+    entries: [
+      { d: '24-06-01 13:00:00', v: 0, l: 0, s: 0, p: 0 },
+      { d: '24-06-17 13:00:00', v: 1, l: 0, s: 0, p: 0 }
+    ]
+  };
+  const { usage } = aggregate(data, {}, { '24-06-01': '0.20.-1', '24-06-17': '0.20.0' });
+
+  it('keeps the prereleases in the usage charts', () => {
+    expect(usage.versions).toEqual(['0.20.0', '0.20.-1']);
+    expect(usage.days).toEqual([
+      { date: '2024-06-01', versions: [1, 1] },
+      { date: '2024-06-17', versions: [0, 1] }
+    ]);
+  });
+
+  it('has no release markers for prereleases', () => {
+    expect(usage.releases).toEqual({ '2024-06-17': '0.20.0' });
+  });
+
+  it('leaves the prereleases out of the distributions', () => {
+    expect(usage.profiles).toEqual({ '0.20.0': { default: 1 } });
+    expect(usage.systems).toEqual({ '0.20.0': { 'Windows 10/11': 1 } });
   });
 });
