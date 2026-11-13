@@ -23,8 +23,10 @@ const UsageCharts = lazy(() =>
 const VersionCharts = lazy(() =>
   import('./components/VersionCharts.tsx').then((m) => ({ default: m.VersionCharts }))
 );
-const ProfileCharts = lazy(() =>
-  import('./components/ProfileCharts.tsx').then((m) => ({ default: m.ProfileCharts }))
+const DistributionCharts = lazy(() =>
+  import('./components/DistributionCharts.tsx').then((m) => ({
+    default: m.DistributionCharts
+  }))
 );
 
 function PageHeader() {
@@ -203,7 +205,28 @@ export function App() {
               />
             }
           >
-            <ProfileCharts profiles={data.profiles} />
+            <DistributionCharts distributions={data.profiles} />
+          </Lazy>
+        </div>
+      </section>
+
+      <section className={'content-section'}>
+        <h2>Operating systems</h2>
+        <p>
+          These graphs show on which operating systems each version was started. Older
+          versions of OpenSpace did not report the operating system, so they are not
+          included.
+        </p>
+        <div className={'chart-grid'}>
+          <Lazy
+            fallback={
+              <Skeleton
+                className={'chart-medium'}
+                count={Object.keys(data.systems).length}
+              />
+            }
+          >
+            <DistributionCharts distributions={data.systems} />
           </Lazy>
         </div>
       </section>

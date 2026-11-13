@@ -62,6 +62,11 @@ export interface UsageFile {
    * For each version, the number of times each profile has been started
    */
   profiles: Record<string, Record<string, number>>;
+
+  /**
+   * For each version, the number of times it has been started on each operating system
+   */
+  systems: Record<string, Record<string, number>>;
 }
 
 //
@@ -154,4 +159,9 @@ export interface UsageData {
    * For each version, the number of times each profile has been started
    */
   profiles: Record<string, Record<string, number>>;
+
+  /**
+   * For each version, the number of times it has been started on each operating system
+   */
+  systems: Record<string, Record<string, number>>;
 }

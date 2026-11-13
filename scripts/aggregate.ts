@@ -88,12 +88,15 @@ export function aggregate(
   const days = new Map<string, Counter>();
   // Version -> Profile -> count
   const profiles = new Map<string, Counter>();
+  // Version -> Operating system -> count
+  const systems = new Map<string, Counter>();
   const missing = new Set<string>();
 
   for (const entry of data.entries) {
     const version = data.versions[entry.v];
     const location = data.locations[entry.l];
     const profile = data.profiles[entry.p];
+    const system = data.systems[entry.s];
     if (!isValidPlace(location)) continue;
 
     const date = toFullYear(entry.d);
@@ -126,6 +129,12 @@ export function aggregate(
         profile
       );
     }
+    if (system !== '') {
+      increaseCount(
+        getOrCreate(systems, version, () => new Map()),
+        system
+      );
+    }
   }
 
   const versions = sortVersions(
@@ -137,6 +146,14 @@ export function aggregate(
   ].sort();
   const monthIndices = indexMap(months);
   const sortedDays = [...days.keys()].sort();
+
+  // Converts the per-version counters into records, ordered from newest to oldest version
+  const perVersion = (counters: Map<string, Counter>) =>
+    Object.fromEntries(
+      versions
+        .filter((v) => counters.has(v))
+        .map((v) => [v, Object.fromEntries(counters.get(v) ?? [])])
+    );
 
   const usage: UsageFile = {
     months,
@@ -163,11 +180,8 @@ export function aggregate(
         .map(([date, version]) => [toFullYear(date), version])
         .filter(([date]) => days.has(date))
     ),
-    profiles: Object.fromEntries(
-      versions
-        .filter((v) => profiles.has(v))
-        .map((v) => [v, Object.fromEntries(profiles.get(v) ?? [])])
-    )
+    profiles: perVersion(profiles),
+    systems: perVersion(systems)
   };
 
   return { usage, missing };

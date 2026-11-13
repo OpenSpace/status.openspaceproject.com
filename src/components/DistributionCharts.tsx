@@ -4,17 +4,17 @@ import { versionName } from '../util.ts';
 
 import { type ChartOption, EChart } from './EChart.tsx';
 
-interface ProfileChartProps {
+interface DistributionChartProps {
   version: string;
-  profiles: Record<string, number>;
+  counts: Record<string, number>;
 }
 
 /**
- * Shows how often each profile was started with the provided version
+ * Shows how the starts with the provided version are distributed among the `counts`
  */
-function ProfileChart({ version, profiles }: ProfileChartProps) {
+function DistributionChart({ version, counts }: DistributionChartProps) {
   const option = useMemo<ChartOption>(() => {
-    const data = Object.entries(profiles)
+    const data = Object.entries(counts)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value);
 
@@ -55,17 +55,24 @@ function ProfileChart({ version, profiles }: ProfileChartProps) {
         }
       ]
     };
-  }, [version, profiles]);
+  }, [version, counts]);
 
   return <EChart option={option} className={'chart-medium'} />;
 }
 
 interface Props {
-  profiles: Record<string, Record<string, number>>;
+  /**
+   * For each version, the number of starts per category (for example profile or
+   * operating system)
+   */
+  distributions: Record<string, Record<string, number>>;
 }
 
-export function ProfileCharts({ profiles }: Props) {
-  return Object.entries(profiles).map(([version, counts]) => (
-    <ProfileChart key={version} version={version} profiles={counts} />
+/**
+ * Shows one pie chart per version with the distribution of the starts of that version
+ */
+export function DistributionCharts({ distributions }: Props) {
+  return Object.entries(distributions).map(([version, counts]) => (
+    <DistributionChart key={version} version={version} counts={counts} />
   ));
 }

@@ -30,12 +30,12 @@ describe('aggregate', () => {
       { p: '98ea3486c', r: 'Norrköping', c: 'Östergötland' }
     ],
     versions: ['0.20.0', '', '0.21.0'],
-    systems: [''],
+    systems: ['', 'Windows 10/11', 'macOS'],
     profiles: ['', 'default'],
     entries: [
-      { d: '24-06-17 13:00:00', v: 0, l: 0, s: 0, p: 1 },
+      { d: '24-06-17 13:00:00', v: 0, l: 0, s: 1, p: 1 },
       { d: '24-06-17 14:00:00', v: 2, l: 1, s: 0, p: 0 },
-      { d: '24-07-01 10:00:00', v: 1, l: 2, s: 0, p: 1 },
+      { d: '24-07-01 10:00:00', v: 1, l: 2, s: 2, p: 1 },
       { d: '24-07-02 10:00:00', v: 0, l: 3, s: 0, p: 1 }
     ]
   };
@@ -83,5 +83,12 @@ describe('aggregate', () => {
 
   it('counts the profiles per version', () => {
     expect(usage.profiles).toEqual({ '': { default: 1 }, '0.20.0': { default: 1 } });
+  });
+
+  it('counts the operating systems per version', () => {
+    expect(usage.systems).toEqual({
+      '': { macOS: 1 },
+      '0.20.0': { 'Windows 10/11': 1 }
+    });
   });
 });

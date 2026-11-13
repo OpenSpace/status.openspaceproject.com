@@ -14,7 +14,8 @@ const file: UsageFile = {
     { date: '2024-07-01', versions: [0, 1, 1, 3, 2, 1] }
   ],
   releases: { '2024-06-17': '0.20.0' },
-  profiles: { '0.20.0': { default: 2 } }
+  profiles: { '0.20.0': { default: 2 } },
+  systems: { '0.20.0': { 'Windows 10/11': 2 } }
 };
 
 describe('decodeUsage', () => {

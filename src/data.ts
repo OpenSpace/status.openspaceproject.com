@@ -56,6 +56,7 @@ export function decodeUsage(file: UsageFile): UsageData {
       counts: sparseToDense(versions, file.versions.length),
       release: file.releases[date] ?? null
     })),
-    profiles: file.profiles
+    profiles: file.profiles,
+    systems: file.systems
   };
 }
