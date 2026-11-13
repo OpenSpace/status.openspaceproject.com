@@ -405,8 +405,18 @@ strong {
 
 .chart-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 560px), 1fr));
+  grid-template-columns: 1fr;
   gap: 1.25rem;
+}
+
+/*
+ * Two charts per row on larger screens. The breakpoint is low enough that a 1920px wide
+ * screen still qualifies with 150% display scaling, which makes it 1280 CSS pixels wide
+ */
+@media (min-width: 1200px) {
+  .chart-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .chart-small {
