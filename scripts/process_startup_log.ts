@@ -64,3 +64,17 @@ const result: LogData = {
 };
 fs.writeFileSync(outputFile, JSON.stringify(result));
 console.log(`Wrote ${entries.length} entries to ${outputFile}, skipped ${skipped} lines`);
+
+// List the versions that were encountered in the logs but have no release date. The empty
+// version belongs to builds without a version number and is not a release
+const releases = JSON.parse(
+  fs.readFileSync(path.join(import.meta.dirname, '..', 'releases.json'), 'utf8')
+) as { dates: Record<string, string> };
+const released = new Set(Object.values(releases.dates));
+const undated = versions.list.filter((v) => v !== '' && !released.has(v)).sort();
+if (undated.length > 0) {
+  console.log(`${undated.length} versions have no release date in releases.json:`);
+  for (const v of undated) {
+    console.log(`  ${v}`);
+  }
+}
