@@ -183,8 +183,20 @@ describe('parseLogLine', () => {
     });
   });
 
+  it('accepts lines that end after the IP address with an empty version', () => {
+    expect(parseLogLine(line('24-02-20 10:28:05.554186', '10.245.0.0'))).toEqual({
+      date: '24-02-20 10:00:00',
+      version: '',
+      city: '',
+      region: '',
+      country: '',
+      system: '',
+      profile: ''
+    });
+  });
+
   it('rejects lines with too few or too many columns', () => {
-    expect(parseLogLine(line('24-06-17 13:45:12', 'ip'))).toHaveProperty('error');
+    expect(parseLogLine('24-06-17 13:45:12')).toHaveProperty('error');
     expect(
       parseLogLine(line('24-06-17 13:45:12', 'ip', '0.20.0', 'hash', 'city', 'region'))
     ).toHaveProperty('error');

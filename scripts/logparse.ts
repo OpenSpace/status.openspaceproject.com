@@ -145,12 +145,13 @@ export interface LogLine {
  * commit hash, city, region, country, and optionally the operating system and the
  * profile. Some older entries for which the location could not be determined end after
  * the commit hash, or after the version for builds that did not report a commit hash,
- * instead of containing empty location columns.
+ * instead of containing empty location columns. A few entries end after the IP address;
+ * these are counted with an empty version, like builds without a version number.
  */
 export function parseLogLine(line: string): LogLine | { error: string } {
   const s = line.split('\t');
-  if (s.length < 3 || s.length === 5 || s.length === 6 || s.length > 9) {
-    return { error: `Expected 3, 4, or 7-9 columns, got ${s.length}` };
+  if (s.length < 2 || s.length === 5 || s.length === 6 || s.length > 9) {
+    return { error: `Expected 2-4 or 7-9 columns, got ${s.length}` };
   }
   if (!TimestampRegex.test(s[0])) {
     return { error: `Invalid timestamp '${s[0]}'` };
@@ -164,7 +165,7 @@ export function parseLogLine(line: string): LogLine | { error: string } {
   }
 
   const parsed = parseVersion(
-    unescapeHtml(s[2]),
+    unescapeHtml(s[2] ?? ''),
     unescapeHtml(s[7] ?? ''),
     unescapeHtml(s[8] ?? '')
   );
