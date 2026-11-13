@@ -36,10 +36,7 @@ export function SectionNav({ sections }: { sections: NavSection[] }) {
       <ul>
         {sections.map((s) => (
           <li key={s.id}>
-            <a
-              href={`#${s.id}`}
-              aria-current={active === s.id ? 'location' : undefined}
-            >
+            <a href={`#${s.id}`} aria-current={active === s.id ? 'location' : undefined}>
               {s.label}
             </a>
           </li>
