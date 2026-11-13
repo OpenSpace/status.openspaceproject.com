@@ -262,11 +262,11 @@ strong {
   border-radius: 0;
 }
 
-/* The country map shows the whole globe, so its box has the same 2:1 aspect ratio */
+/* The country map shows the globe in Web Mercator between 84°N and 58°S, which is ~3:2 */
 .country-map {
   height: auto;
   min-height: 0;
-  aspect-ratio: 2 / 1;
+  aspect-ratio: 3 / 2;
 }
 
 .country-table {

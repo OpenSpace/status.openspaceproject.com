@@ -28,6 +28,23 @@ const countryTitles: Promise<Map<string, string>> = fetch(worldUrl)
 const Colors = ['#123544', '#3dbdee', '#e8fbc2'];
 
 /**
+ * The Web Mercator projection, the same as used by the tiles of the usage map. The output
+ * is scaled to degrees so that x is the longitude, and y points downwards as on screen
+ */
+const MaxLatitude = 85.051129;
+const Rad = Math.PI / 180;
+const WebMercator = {
+  project: ([lng, lat]: number[]): number[] => {
+    const phi = Math.max(-MaxLatitude, Math.min(MaxLatitude, lat)) * Rad;
+    return [lng, -Math.log(Math.tan(Math.PI / 4 + phi / 2)) / Rad];
+  },
+  unproject: ([x, y]: number[]): number[] => [
+    x,
+    (2 * Math.atan(Math.exp(-y * Rad)) - Math.PI / 2) / Rad
+  ]
+};
+
+/**
  * The French overseas departments have their own country codes in the usage data, but
  * are part of France's outline in the map data, so their launches are counted as France
  */
@@ -100,13 +117,13 @@ export function CountryMap({ countries, range }: Props) {
           type: 'map',
           map: 'world',
           name: 'Launches per country',
-          // Show the whole globe in an equirectangular 2:1 aspect ratio. By default ECharts
-          // fits the map to the extent of the outlines and compresses it horizontally
+          projection: WebMercator,
+          // Mercator diverges towards the poles, so the view is cropped to the inhabited
+          // latitudes (Antarctica is left out), which results in a ~3:2 aspect ratio
           boundingCoords: [
-            [-180, 90],
-            [180, -90]
+            [-180, 84],
+            [180, -58]
           ],
-          aspectScale: 1,
           top: 0,
           bottom: 0,
           left: 0,
