@@ -16,6 +16,15 @@ if (process.argv.length !== 4) {
 }
 const [, , outputFile, logFolder] = process.argv;
 
+// Only versions that have a release date in releases.json are kept. The empty version
+// belongs to builds without a version number and is kept as well
+const releases = JSON.parse(
+  fs.readFileSync(path.join(import.meta.dirname, '..', 'releases.json'), 'utf8')
+) as { dates: Record<string, string> };
+const released = new Set(Object.values(releases.dates));
+// Version -> number of lines that were ignored because the version was not released
+const unreleased = new Map<string, number>();
+
 const versions = makeIndexer();
 // The same system and profile are sometimes reported in lowercase
 const systems = makeIndexer(true);
@@ -35,6 +44,11 @@ for (const file of fs.readdirSync(logFolder)) {
     if ('error' in line) {
       console.log(`Skipping ${file}:${i + 1}: ${line.error}`);
       skipped += 1;
+      continue;
+    }
+
+    if (line.version !== '' && !released.has(line.version)) {
+      unreleased.set(line.version, (unreleased.get(line.version) ?? 0) + 1);
       continue;
     }
 
@@ -65,16 +79,12 @@ const result: LogData = {
 fs.writeFileSync(outputFile, JSON.stringify(result));
 console.log(`Wrote ${entries.length} entries to ${outputFile}, skipped ${skipped} lines`);
 
-// List the versions that were encountered in the logs but have no release date. The empty
-// version belongs to builds without a version number and is not a release
-const releases = JSON.parse(
-  fs.readFileSync(path.join(import.meta.dirname, '..', 'releases.json'), 'utf8')
-) as { dates: Record<string, string> };
-const released = new Set(Object.values(releases.dates));
-const undated = versions.list.filter((v) => v !== '' && !released.has(v)).sort();
-if (undated.length > 0) {
-  console.log(`${undated.length} versions have no release date in releases.json:`);
-  for (const v of undated) {
-    console.log(`  ${v}`);
+if (unreleased.size > 0) {
+  const total = [...unreleased.values()].reduce((a, b) => a + b, 0);
+  console.log(
+    `Ignored ${total} lines from ${unreleased.size} versions without a release date in releases.json:`
+  );
+  for (const [v, count] of [...unreleased].sort(([a], [b]) => a.localeCompare(b))) {
+    console.log(`  ${v} (${count})`);
   }
 }
