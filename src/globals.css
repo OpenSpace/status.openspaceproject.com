@@ -193,6 +193,31 @@ strong {
   margin-bottom: 1.5rem;
 }
 
+/* The link to a section is only shown while hovering the heading or focusing the link */
+.section-heading__anchor {
+  margin-left: 0.5em;
+  color: var(--color-text-light);
+  opacity: 0;
+  transition: opacity var(--animation-duration-fast);
+}
+
+.section-heading:hover .section-heading__anchor,
+.section-heading__anchor:focus-visible {
+  opacity: 1;
+}
+
+.section-heading__anchor:hover {
+  color: var(--color-link);
+  text-decoration: none;
+}
+
+/* Touch screens cannot hover, so the link is always shown there */
+@media (hover: none) {
+  .section-heading__anchor {
+    opacity: 1;
+  }
+}
+
 .content-section p {
   max-width: 120ch;
   margin-bottom: 1rem;

@@ -11,6 +11,7 @@ import { UsageMap } from './components/UsageMap.tsx';
 import usageUrl from './generated/usage.json?url';
 import { decodeUsage } from './data.ts';
 import type { UsageData, UsageFile } from './types.ts';
+import { useScrollToHash } from './useScrollToHash.ts';
 import type { MonthRange } from './util.ts';
 
 // The charts are loaded on demand, so that the page and the usage map can be shown while
@@ -44,6 +45,25 @@ function PageHeader() {
     <header className={'page-header'}>
       <h1>OpenSpace Usage</h1>
     </header>
+  );
+}
+
+/**
+ * The heading of a section with a link to that section next to it, so that a direct link
+ * to the section can be copied
+ */
+function SectionHeading({ id, children }: { id: string; children: string }) {
+  return (
+    <h2 className={'section-heading'}>
+      {children}
+      <a
+        className={'section-heading__anchor'}
+        href={`#${id}`}
+        aria-label={`Link to the section ${children}`}
+      >
+        #
+      </a>
+    </h2>
   );
 }
 
@@ -133,6 +153,8 @@ export function App() {
     setRange((prev) => (prev.begin === r.begin && prev.end === r.end ? prev : r));
   }, []);
 
+  useScrollToHash(data !== null);
+
   if (error !== null) return <ErrorPage error={error} onRetry={retry} />;
   if (data === null) return <LoadingPage />;
 
@@ -146,7 +168,7 @@ export function App() {
       </section>
 
       <section id={'maps'} className={'content-section'}>
-        <h2>Usage maps</h2>
+        <SectionHeading id={'maps'}>Usage maps</SectionHeading>
         <p>
           These maps show the places from where OpenSpace has been started. Note that the
           individual markers are only an approximation based on the <i>city</i> and do not
@@ -172,7 +194,7 @@ export function App() {
       </section>
 
       <section id={'usage'} className={'content-section'}>
-        <h2>Usage charts</h2>
+        <SectionHeading id={'usage'}>Usage charts</SectionHeading>
         <div className={'chart-stack'}>
           <Lazy fallback={<Skeleton className={'chart-large'} count={2} />}>
             <UsageCharts versions={data.versions} days={data.days} />
@@ -181,7 +203,7 @@ export function App() {
       </section>
 
       <section id={'versions'} className={'content-section'}>
-        <h2>Versions</h2>
+        <SectionHeading id={'versions'}>Versions</SectionHeading>
         <p>
           This graph shows for each version how large a portion of the total starts on a
           specific day were of that version. For example, if the 0.15.0 line shows 35% for
@@ -199,7 +221,7 @@ export function App() {
       </section>
 
       <section id={'profiles'} className={'content-section'}>
-        <h2>Profiles</h2>
+        <SectionHeading id={'profiles'}>Profiles</SectionHeading>
         <p>
           These graphs show how often each profile was started for each version. Only
           whether a <i>user profile</i> was started is collected, so it is not possible to
@@ -222,7 +244,7 @@ export function App() {
       </section>
 
       <section id={'systems'} className={'content-section'}>
-        <h2>Operating systems</h2>
+        <SectionHeading id={'systems'}>Operating systems</SectionHeading>
         <p>
           These graphs show on which operating systems each version was started. Older
           versions of OpenSpace did not report the operating system, so they are not
