@@ -131,10 +131,28 @@ describe('parseLogLine', () => {
     expect(result).toMatchObject({ city: '', country: '' });
   });
 
+  it('accepts lines that end after the commit hash', () => {
+    expect(
+      parseLogLine(line('23-07-24 17:23:58.268064', '38.125.0.0', '0.18.0', '587711210'))
+    ).toEqual({
+      date: '23-07-24 17:00:00',
+      version: '0.18.0',
+      city: '',
+      region: '',
+      country: '',
+      system: '',
+      profile: ''
+    });
+  });
+
   it('rejects lines with too few or too many columns', () => {
+    expect(parseLogLine(line('24-06-17 13:45:12', 'ip'))).toHaveProperty('error');
     expect(parseLogLine(line('24-06-17 13:45:12', 'ip', '0.20.0'))).toHaveProperty(
       'error'
     );
+    expect(
+      parseLogLine(line('24-06-17 13:45:12', 'ip', '0.20.0', 'hash', 'city'))
+    ).toHaveProperty('error');
     expect(parseLogLine(line(valid, 'extra'))).toHaveProperty('error');
   });
 

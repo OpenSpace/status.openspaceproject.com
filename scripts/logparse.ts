@@ -127,20 +127,22 @@ export interface LogLine {
  * could not be parsed.
  *
  * The columns of a line are separated by tabs and are: timestamp, IP address, version,
- * unused, city, region, country, and optionally the operating system and the profile.
+ * commit hash, city, region, country, and optionally the operating system and the
+ * profile. Some older entries for which the location could not be determined end after
+ * the commit hash instead of containing empty location columns.
  */
 export function parseLogLine(line: string): LogLine | { error: string } {
   const s = line.split('\t');
-  if (s.length < 7 || s.length > 9) {
-    return { error: `Expected 7-9 columns, got ${s.length}` };
+  if (s.length !== 4 && (s.length < 7 || s.length > 9)) {
+    return { error: `Expected 4 or 7-9 columns, got ${s.length}` };
   }
   if (!TimestampRegex.test(s[0])) {
     return { error: `Invalid timestamp '${s[0]}'` };
   }
 
-  const city = s[4].trim();
-  const region = s[5].trim();
-  const country = s[6].trim();
+  const city = (s[4] ?? '').trim();
+  const region = (s[5] ?? '').trim();
+  const country = (s[6] ?? '').trim();
   // An empty location is valid as the location could not always be determined
   const hasLocation = city !== '' || region !== '' || country !== '';
   if (hasLocation && !isValidLocation(city, region, country)) {
