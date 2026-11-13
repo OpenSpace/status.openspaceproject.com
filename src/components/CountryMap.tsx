@@ -100,10 +100,17 @@ export function CountryMap({ countries, range }: Props) {
           type: 'map',
           map: 'world',
           name: 'Launches per country',
-          top: 10,
-          bottom: 10,
-          left: 10,
-          right: 10,
+          // Show the whole globe in an equirectangular 2:1 aspect ratio. By default ECharts
+          // fits the map to the extent of the outlines and compresses it horizontally
+          boundingCoords: [
+            [-180, 90],
+            [180, -90]
+          ],
+          aspectScale: 1,
+          top: 0,
+          bottom: 0,
+          left: 0,
+          right: 0,
           itemStyle: {
             areaColor: '#1c2228',
             borderColor: 'rgba(184, 200, 202, 0.25)',

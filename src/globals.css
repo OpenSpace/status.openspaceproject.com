@@ -262,6 +262,13 @@ strong {
   border-radius: 0;
 }
 
+/* The country map shows the whole globe, so its box has the same 2:1 aspect ratio */
+.country-map {
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 2 / 1;
+}
+
 .country-table {
   margin-top: 1.25rem;
   font-size: var(--font-size-sm);
