@@ -42,7 +42,6 @@ const Sections: NavSection[] = [
 function PageHeader() {
   return (
     <header className={'page-header'}>
-      <p className={'page-header__eyebrow'}>OpenSpace Status</p>
       <h1>OpenSpace Usage</h1>
     </header>
   );

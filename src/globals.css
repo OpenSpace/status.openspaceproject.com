@@ -16,6 +16,7 @@
   --color-background: var(--os-deep-space);
   --color-surface-primary: var(--os-event-horizon);
   --color-accent-primary: var(--os-prime-blue);
+  --color-accent-secondary: var(--os-flare-yellow);
   --color-accent-tertiary: var(--os-airglow-yellow);
   --color-text: var(--os-satellite-gray);
   --color-text-highlight: #f4f7f7;
@@ -106,15 +107,6 @@ strong {
   border-bottom: 1px solid var(--color-border-faint);
 }
 
-.page-header__eyebrow {
-  font-family: var(--font-monospace);
-  font-size: var(--font-size-xs);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-accent-primary);
-  margin-bottom: 0.5rem;
-}
-
 .page-header h1 {
   font-family: var(--font-headings);
   font-size: clamp(2rem, 4vw, 3rem);
@@ -168,7 +160,7 @@ strong {
 
 .section-nav a[aria-current='location'] {
   color: var(--color-text-highlight);
-  border-bottom-color: var(--color-accent-primary);
+  border-bottom-color: var(--color-accent-secondary);
 }
 
 .section-nav a:focus-visible {
