@@ -96,15 +96,17 @@ describe('isValidLocation', () => {
 });
 
 describe('isAcceptableLocation', () => {
-  it('accepts places, empty locations, and locations with only a country', () => {
+  it('accepts places, empty locations, and locations without a city', () => {
     expect(isAcceptableLocation('Norrköping', '', 'SE')).toBe(true);
     expect(isAcceptableLocation('', '', '')).toBe(true);
     expect(isAcceptableLocation('', '', 'US')).toBe(true);
+    expect(isAcceptableLocation('', 'Rhode Island', 'US')).toBe(true);
   });
 
   it('rejects broken locations', () => {
     expect(isAcceptableLocation('', '', 'Östergötland')).toBe(false);
-    expect(isAcceptableLocation('', 'Ohio', 'US')).toBe(false);
+    expect(isAcceptableLocation('', 'Ohio', '')).toBe(false);
+    expect(isAcceptableLocation('', 'Ohio 82.203.185.131', 'US')).toBe(false);
     expect(isAcceptableLocation('98ea3486c', 'Norrköping', 'Östergötland')).toBe(false);
   });
 });

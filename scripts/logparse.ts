@@ -112,11 +112,14 @@ export function isValidLocation(city: string, region: string, country: string): 
 /**
  * Returns `true` if the provided location can be stored with an entry. Besides real
  * places (see `isValidLocation`), these are empty locations and locations for which only
- * the country could be determined.
+ * the country, or the region and the country, could be determined.
  */
 export function isAcceptableLocation(city: string, region: string, country: string) {
   if (city.trim() === '' && region.trim() === '') {
     return country.trim() === '' || CountryCodeRegex.test(country.trim());
+  }
+  if (city.trim() === '') {
+    return CountryCodeRegex.test(country.trim()) && !ForeignContentRegex.test(region);
   }
   return isValidLocation(city, region, country);
 }

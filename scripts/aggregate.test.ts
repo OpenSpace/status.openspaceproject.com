@@ -29,7 +29,8 @@ describe('aggregate', () => {
       { p: 'Nowhere', r: '', c: 'US' },
       { p: '98ea3486c', r: 'Norrköping', c: 'Östergötland' },
       { p: '', r: '', c: '' },
-      { p: '', r: '', c: 'US' }
+      { p: '', r: '', c: 'US' },
+      { p: '', r: 'Rhode Island', c: 'US' }
     ],
     versions: ['0.20.0', '', '0.21.0'],
     systems: ['', 'Windows 10/11', 'macOS'],
@@ -40,7 +41,8 @@ describe('aggregate', () => {
       { d: '24-07-01 10:00:00', v: 1, l: 2, s: 2, p: 1 },
       { d: '24-07-02 10:00:00', v: 0, l: 3, s: 0, p: 1 },
       { d: '24-07-01 11:00:00', v: 1, l: 4, s: 0, p: 0 },
-      { d: '24-07-01 12:00:00', v: 1, l: 5, s: 0, p: 0 }
+      { d: '24-07-01 12:00:00', v: 1, l: 5, s: 0, p: 0 },
+      { d: '24-07-01 13:00:00', v: 1, l: 6, s: 0, p: 0 }
     ]
   };
   const geolocations = {
@@ -66,7 +68,7 @@ describe('aggregate', () => {
     expect(missing).toEqual(new Set(['Nowhere, , US']));
     expect(usage.countries).toEqual([
       { code: 'SE', name: 'Sweden', months: [0, 2] },
-      { code: 'US', name: 'United States', months: [1, 2] }
+      { code: 'US', name: 'United States', months: [1, 3] }
     ]);
   });
 
@@ -75,14 +77,14 @@ describe('aggregate', () => {
   });
 
   it('counts entries without a place for the charts but not the maps', () => {
-    // The places and `missing` above don't contain the empty and country-only locations
-    expect(usage.days[1]).toEqual({ date: '2024-07-01', versions: [0, 3] });
+    // The places and `missing` above don't contain the locations without a city
+    expect(usage.days[1]).toEqual({ date: '2024-07-01', versions: [0, 4] });
   });
 
   it('stores the starts per day and version', () => {
     expect(usage.days).toEqual([
       { date: '2024-06-17', versions: [1, 1, 2, 1] },
-      { date: '2024-07-01', versions: [0, 3] }
+      { date: '2024-07-01', versions: [0, 4] }
     ]);
   });
 
