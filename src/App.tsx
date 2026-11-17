@@ -175,6 +175,10 @@ export function App() {
           represent the precise location.
         </p>
         <p>
+          The first map can be switched between markers and a heatmap, in which the
+          intensity at a place shows how often OpenSpace has been started from there.
+        </p>
+        <p>
           The maps can be filtered to a range of months. Both ends of the range are
           inclusive and an empty field means that there is no limit on that end. For
           example, setting both fields to February 2025 shows the usage in that month

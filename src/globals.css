@@ -275,6 +275,7 @@ strong {
 }
 
 .filter button,
+.map-mode button,
 .button {
   font: inherit;
   font-size: var(--font-size-sm);
@@ -290,17 +291,20 @@ strong {
 }
 
 .filter button:not(:disabled),
+.map-mode button,
 .button {
   cursor: pointer;
 }
 
 .filter button:not(:disabled):hover,
+.map-mode button:hover,
 .button:hover {
   background: var(--color-overlay-light-faint);
   color: #ffffff;
 }
 
-.filter button[aria-pressed='true'] {
+.filter button[aria-pressed='true'],
+.map-mode button[aria-pressed='true'] {
   border-color: var(--color-accent-primary);
   color: var(--color-text-highlight);
   background: rgba(61, 189, 238, 0.15);
@@ -308,10 +312,20 @@ strong {
 
 .filter button:focus-visible,
 .filter input:focus-visible,
+.map-mode button:focus-visible,
 .button:focus-visible,
 .country-table summary:focus-visible {
   outline: 2px solid var(--color-accent-primary);
   outline-offset: 3px;
+}
+
+/*
+ * The toggle between the display modes of the usage map
+ */
+.map-mode {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 /*

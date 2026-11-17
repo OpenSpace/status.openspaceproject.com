@@ -50,7 +50,7 @@ export default defineConfig({
             },
             {
               name: 'leaflet',
-              test: /node_modules[/\\](leaflet|react-leaflet|@react-leaflet)[/\\]/,
+              test: /node_modules[/\\](leaflet\.heat|simpleheat|leaflet|react-leaflet|@react-leaflet)[/\\]/,
               priority: 15
             },
             {
