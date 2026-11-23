@@ -2,3 +2,4 @@ dist
 .cache
 src/generated
 geolocation.json
+public/places.json

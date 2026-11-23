@@ -6,3 +6,4 @@ process_startup_log.cjs
 
 /.quarto/
 **/*.quarto_ipynb
+public/places.json
