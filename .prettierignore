@@ -1,5 +1,11 @@
+# Build output and generated files
 dist
 .cache
 src/generated
-geolocation.json
 public/places.json
+
+# Formatted by `npm run format-geolocation`
+geolocation.json
+
+# Markdown is checked by markdownlint, whose list indentation differs from Prettier's
+*.md

@@ -1,21 +1,4 @@
 {
   "files": [],
-  "compilerOptions": {
-    "skipLibCheck": true,
-
-    "isolatedModules": true,
-    "moduleDetection": "force",
-    "verbatimModuleSyntax": true,
-    /* Linting */
-    "allowUnreachableCode": false,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitAny": true,
-    "noImplicitOverride": true,
-    "noImplicitReturns": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "strict": true
-  },
   "references": [{ "path": "./tsconfig.node.json" }, { "path": "./tsconfig.app.json" }]
 }

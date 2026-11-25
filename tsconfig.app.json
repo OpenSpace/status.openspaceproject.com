@@ -1,18 +1,8 @@
 {
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "composite": true,
-    "noEmit": true,
-    "tsBuildInfoFile": "node_modules/.tmp/tsconfig.app.tsbuildinfo",
-    "target": "ES2022",
-    "lib": ["ES2023", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"],
-    "jsx": "react-jsx",
+  "extends": "@openspace/shared-configs/tsconfig.vite.json",
 
-    /* The page is bundled by Vite */
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true
+  "compilerOptions": {
+    "composite": true
   },
   "include": ["src"]
 }
