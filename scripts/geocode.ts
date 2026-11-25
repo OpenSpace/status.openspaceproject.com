@@ -43,13 +43,14 @@ async function geocode(place: string): Promise<GeoPosition | { error: string }> 
 
   const { candidates } = (await res.json()) as GeocodeResponse;
   candidates.sort((a, b) => b.score - a.score);
-  if (candidates.length === 0) return { error: 'No candidates found' };
-  if (candidates.length > 1 && candidates[0].score < MinScore) {
+  const [best] = candidates;
+  if (best === undefined) return { error: 'No candidates found' };
+  if (candidates.length > 1 && best.score < MinScore) {
     return {
-      error: `${candidates.length} candidates, the best has a score of ${candidates[0].score}`
+      error: `${candidates.length} candidates, the best has a score of ${best.score}`
     };
   }
-  return { lat: candidates[0].location.y, lng: candidates[0].location.x };
+  return { lat: best.location.y, lng: best.location.x };
 }
 
 //

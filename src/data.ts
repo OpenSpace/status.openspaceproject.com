@@ -7,6 +7,15 @@ import type {
 } from './types.ts';
 
 /**
+ * Returns the pairs of index and count that make up the sparse counts
+ */
+function* sparsePairs(sparse: SparseCounts): Generator<[index: number, count: number]> {
+  for (let i = 0; i + 1 < sparse.length; i += 2) {
+    yield [sparse[i] ?? 0, sparse[i + 1] ?? 0];
+  }
+}
+
+/**
  * Converts the sparse counts into a record that maps each of the provided `keys` that has
  * a count to that count. Returns the record and the sum of all counts.
  */
@@ -16,9 +25,10 @@ function sparseToRecord(
 ): { byMonth: MonthlyCounts; total: number } {
   const byMonth: MonthlyCounts = {};
   let total = 0;
-  for (let i = 0; i < sparse.length; i += 2) {
-    byMonth[keys[sparse[i]]] = sparse[i + 1];
-    total += sparse[i + 1];
+  for (const [index, count] of sparsePairs(sparse)) {
+    const key = keys[index];
+    if (key !== undefined) byMonth[key] = count;
+    total += count;
   }
   return { byMonth, total };
 }
@@ -28,8 +38,8 @@ function sparseToRecord(
  */
 function sparseToDense(sparse: SparseCounts, length: number): number[] {
   const result = new Array<number>(length).fill(0);
-  for (let i = 0; i < sparse.length; i += 2) {
-    result[sparse[i]] = sparse[i + 1];
+  for (const [index, count] of sparsePairs(sparse)) {
+    result[index] = count;
   }
   return result;
 }

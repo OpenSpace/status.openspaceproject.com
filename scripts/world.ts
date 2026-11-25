@@ -5,10 +5,10 @@
  * alpha-2 codes that are used in the usage data.
  */
 
-import fs from 'node:fs';
-import { createRequire } from 'node:module';
 import type { Feature, FeatureCollection, Geometry, Position } from 'geojson';
 import countries from 'i18n-iso-countries';
+import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import { feature, merge } from 'topojson-client';
 import type { GeometryCollection, Topology } from 'topojson-specification';
 
@@ -49,11 +49,14 @@ const Precision = 2;
  * moved onto it, which only affects a very small area.
  */
 function fixAntimeridian(ring: Position[]): Position[] {
-  const crosses = ring.some((p, i) => i > 0 && Math.abs(p[0] - ring[i - 1][0]) > 180);
+  const lngs = ring.map(([lng = 0]) => lng);
+  const crosses = lngs.some(
+    (lng, i) => i > 0 && Math.abs(lng - (lngs[i - 1] ?? lng)) > 180
+  );
   if (!crosses) return ring;
 
-  const east = ring.filter((p) => p[0] > 0).length >= ring.length / 2;
-  return ring.map(([lng, lat]) => {
+  const east = lngs.filter((lng) => lng > 0).length >= ring.length / 2;
+  return ring.map(([lng = 0, lat = 0]) => {
     if (east && lng < 0) return [180, lat];
     if (!east && lng > 0) return [-180, lat];
     return [lng, lat];
@@ -110,14 +113,13 @@ function countryFeatures(
 
   const result = new Map<string, Feature<Geometry, CountryProperties>>();
   for (const [code, geometries] of byCode) {
-    const title =
-      geometries.length === 1
-        ? (nameOf(geometries[0]) ?? code)
-        : (countries.getName(code, 'en') ?? code);
-    const geometry =
-      geometries.length === 1
-        ? (feature(topology, geometries[0]) as Feature<Geometry>).geometry
-        : merge(topology, geometries as Parameters<typeof merge>[1]);
+    const single = geometries.length === 1 ? geometries[0] : undefined;
+    const title = single
+      ? (nameOf(single) ?? code)
+      : (countries.getName(code, 'en') ?? code);
+    const geometry = single
+      ? (feature(topology, single) as Feature<Geometry>).geometry
+      : merge(topology, geometries as Parameters<typeof merge>[1]);
     result.set(code, {
       type: 'Feature',
       properties: { name: code, title },

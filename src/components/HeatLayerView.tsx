@@ -1,6 +1,6 @@
-import { HeatLayer } from 'leaflet.heat';
 import { useEffect, useMemo } from 'react';
 import { useMap } from 'react-leaflet';
+import { HeatLayer } from 'leaflet.heat';
 
 import type { HeatPoint } from '../heat.ts';
 

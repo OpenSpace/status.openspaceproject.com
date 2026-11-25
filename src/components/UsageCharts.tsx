@@ -32,9 +32,10 @@ function createOption(
         const items = (Array.isArray(params) ? params : [params]).filter(
           (p) => (p.value as [number, number])[1] > 0
         );
-        if (items.length === 0) return '';
-        const date = formatter.format((items[0].value as [number, number])[0]);
-        const total = items.reduce((acc, p) => acc + (p.value as number[])[1], 0);
+        const [first] = items;
+        if (first === undefined) return '';
+        const date = formatter.format((first.value as [number, number])[0]);
+        const total = items.reduce((acc, p) => acc + (p.value as [number, number])[1], 0);
         const rows = items
           .map((p) => `${p.marker}${p.seriesName}: <b>${(p.value as number[])[1]}</b>`)
           .join('<br>');
@@ -55,9 +56,9 @@ function createOption(
       barCategoryGap: '0%',
       // ECharts stacks the series by data index, so every series needs a value for every
       // day, even if it is zero
-      data: days.map((day, j) => [dates[j], day.counts[i]]),
+      data: days.map((day, j) => [dates[j] ?? 0, day.counts[i] ?? 0]),
       // Attach the release markers to only one of the series so that they are drawn once
-      markLine: i === 0 ? releaseMarkers(days) : undefined
+      ...(i === 0 ? { markLine: releaseMarkers(days) } : {})
     }))
   };
 }

@@ -86,7 +86,8 @@ function shuffle<T>(list: T[], seed: number): T[] {
   const result = [...list];
   for (let i = result.length - 1; i > 0; i -= 1) {
     const j = Math.floor(random() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
+    // Both indices are within the list
+    [result[i], result[j]] = [result[j] as T, result[i] as T];
   }
   return result;
 }
@@ -112,7 +113,7 @@ export function versionColor(version: string, versions: string[]): string {
   if (version === '') return NoVersionColor;
   const named = versions.filter((v) => v !== '');
   const age = named.length - 1 - named.indexOf(version);
-  return Colors[age % Colors.length];
+  return Colors[age % Colors.length] ?? NoVersionColor;
 }
 
 /**
@@ -177,8 +178,8 @@ export function countInRange(
  * Converts a date in the form "YYYY-MM-DD" or "YYYY-MM" into a local `Date`.
  */
 export function parseDate(date: string): Date {
-  const [year, month, day] = date.split('-').map(Number);
-  return new Date(year, month - 1, day ?? 1);
+  const [year = 0, month = 1, day = 1] = date.split('-').map(Number);
+  return new Date(year, month - 1, day);
 }
 
 /**
@@ -186,7 +187,7 @@ export function parseDate(date: string): Date {
  * form "YYYY-MM". The `offset` can be negative
  */
 export function addMonths(month: string, offset: number): string {
-  const [year, m] = month.split('-').map(Number);
+  const [year = 0, m = 1] = month.split('-').map(Number);
   const index = year * 12 + (m - 1) + offset;
   const newYear = Math.floor(index / 12);
   const newMonth = (index % 12) + 1;
@@ -207,7 +208,7 @@ export function groupByMonth(days: DayUsage[]): DayUsage[] {
     const month = day.date.substring(0, 'YYYY-MM'.length);
     const last = months.at(-1);
     if (last?.date === month) {
-      day.counts.forEach((count, i) => (last.counts[i] += count));
+      day.counts.forEach((count, i) => (last.counts[i] = (last.counts[i] ?? 0) + count));
       if (day.release !== null) {
         last.release =
           last.release === null ? day.release : `${last.release}, ${day.release}`;

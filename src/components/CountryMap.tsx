@@ -1,5 +1,5 @@
-import { registerMap } from 'echarts/core';
 import { useEffect, useMemo, useState } from 'react';
+import { registerMap } from 'echarts/core';
 
 import worldUrl from '../generated/world.json?url';
 import type { CountryUsage } from '../types.ts';
@@ -34,11 +34,11 @@ const Colors = ['#123544', '#3dbdee', '#e8fbc2'];
 const MaxLatitude = 85.051129;
 const Rad = Math.PI / 180;
 const WebMercator = {
-  project: ([lng, lat]: number[]): number[] => {
+  project: ([lng = 0, lat = 0]: number[]): number[] => {
     const phi = Math.max(-MaxLatitude, Math.min(MaxLatitude, lat)) * Rad;
     return [lng, -Math.log(Math.tan(Math.PI / 4 + phi / 2)) / Rad];
   },
-  unproject: ([x, y]: number[]): number[] => [
+  unproject: ([x = 0, y = 0]: number[]): number[] => [
     x,
     (2 * Math.atan(Math.exp(-y * Rad)) - Math.PI / 2) / Rad
   ]
@@ -98,6 +98,7 @@ export function CountryMap({ countries, range }: Props) {
         trigger: 'item',
         formatter: (p) => {
           const item = Array.isArray(p) ? p[0] : p;
+          if (item === undefined) return '';
           const d = item.data as { count?: number; title?: string } | undefined;
           const title = d?.title ?? titles.get(item.name) ?? item.name;
           if (d?.count === undefined) return title;

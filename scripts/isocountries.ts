@@ -252,8 +252,9 @@ export function convertCountryCode(code: string): string {
     ZW: { name: 'Zimbabwe' }
   };
 
-  if (code in isoCountries) {
-    return isoCountries[code].name;
+  const country = isoCountries[code];
+  if (country !== undefined) {
+    return country.name;
   } else {
     console.error(`Unknown country code: ${code}`);
     return code;

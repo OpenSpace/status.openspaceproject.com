@@ -52,6 +52,20 @@ export interface Entry {
   p: Index;
 }
 
+/**
+ * Returns the element at `index` of `list`. The indices of the entries in the data.json
+ * always refer to an element, so a missing element means that the file is broken
+ */
+export function lookup<T>(list: readonly T[], index: Index): T {
+  const value = list[index];
+  if (value === undefined) {
+    throw new Error(
+      `Index ${index} is out of range for a list of ${list.length} elements`
+    );
+  }
+  return value;
+}
+
 export interface LogData {
   /**
    * The list of all locations that have been encountered

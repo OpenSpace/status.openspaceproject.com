@@ -58,13 +58,13 @@ function groupVersions(versions: string[]): VersionGroup[] {
  * line only covers the time in which the version was in use
  */
 function shareOfStarts(days: DayUsage[], index: number): [number, number | null][] {
-  const first = days.findIndex((day) => day.counts[index] > 0);
-  const last = days.findLastIndex((day) => day.counts[index] > 0);
+  const first = days.findIndex((day) => (day.counts[index] ?? 0) > 0);
+  const last = days.findLastIndex((day) => (day.counts[index] ?? 0) > 0);
   return days.map((day, i) => {
     const date = parseDate(day.date).getTime();
     if (i < first || i > last) return [date, null];
     const total = day.counts.reduce((acc, v) => acc + v, 0);
-    return [date, (day.counts[index] / total) * 100];
+    return [date, ((day.counts[index] ?? 0) / total) * 100];
   });
 }
 
@@ -82,8 +82,9 @@ function createOption(versions: string[], days: DayUsage[]): ChartOption {
           .map((p) => ({ p, value: (p.value as [number, number | null])[1] }))
           .filter((item) => item.value !== null && item.value > 0)
           .sort((a, b) => (b.value ?? 0) - (a.value ?? 0));
-        if (items.length === 0) return '';
-        const date = DateFormat.format((items[0].p.value as [number, number])[0]);
+        const [first] = items;
+        if (first === undefined) return '';
+        const date = DateFormat.format((first.p.value as [number, number])[0]);
         const rows = items
           .map(
             ({ p, value }) => `${p.marker}${p.seriesName}: <b>${value?.toFixed(1)}%</b>`

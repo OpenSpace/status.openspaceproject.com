@@ -32,6 +32,7 @@ function DistributionChart({ version, counts }: DistributionChartProps) {
         trigger: 'item',
         formatter: (p) => {
           const item = Array.isArray(p) ? p[0] : p;
+          if (item === undefined) return '';
           return `${item.marker}${item.name}: <b>${String(item.value)}</b> (${item.percent}%)`;
         }
       },

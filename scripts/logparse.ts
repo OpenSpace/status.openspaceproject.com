@@ -18,7 +18,10 @@ const HtmlEntities: Record<string, string> = {
  * Reverses the HTML escaping that has been applied to the values in the log files
  */
 export function unescapeHtml(value: string): string {
-  return value.replace(/&(amp|quot|lt|gt|#39|#x27);/g, (entity) => HtmlEntities[entity]);
+  return value.replace(
+    /&(amp|quot|lt|gt|#39|#x27);/g,
+    (entity) => HtmlEntities[entity] ?? entity
+  );
 }
 
 /**
@@ -33,10 +36,10 @@ export function parseVersion(
   system = '',
   profile = ''
 ): { version: string; system: string; profile: string } {
-  const [version, ...parameters] = rawVersion.split('&');
+  const [version = '', ...parameters] = rawVersion.split('&');
   const values: Record<string, string> = {};
   for (const parameter of parameters) {
-    const [key, ...value] = parameter.split('=');
+    const [key = '', ...value] = parameter.split('=');
     values[key] = value.join('=');
   }
 
@@ -153,8 +156,9 @@ export function parseLogLine(line: string): LogLine | { error: string } {
   if (s.length < 2 || s.length === 5 || s.length === 6 || s.length > 9) {
     return { error: `Expected 2-4 or 7-9 columns, got ${s.length}` };
   }
-  if (!TimestampRegex.test(s[0])) {
-    return { error: `Invalid timestamp '${s[0]}'` };
+  const timestamp = s[0] ?? '';
+  if (!TimestampRegex.test(timestamp)) {
+    return { error: `Invalid timestamp '${timestamp}'` };
   }
 
   const city = (s[4] ?? '').trim();
@@ -175,7 +179,7 @@ export function parseLogLine(line: string): LogLine | { error: string } {
 
   return {
     // Remove the minutes and seconds from the timestamps
-    date: s[0].substring(0, 'YY-MM-DD HH'.length) + ':00:00',
+    date: timestamp.substring(0, 'YY-MM-DD HH'.length) + ':00:00',
     version: parsed.version,
     city,
     region,

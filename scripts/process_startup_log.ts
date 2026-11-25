@@ -9,12 +9,12 @@ import path from 'node:path';
 import type { Entry, LogData } from './logdata.ts';
 import { makeIndexer, parseLogLine } from './logparse.ts';
 
-if (process.argv.length !== 4) {
+const [, , outputFile, logFolder, ...extra] = process.argv;
+if (outputFile === undefined || logFolder === undefined || extra.length > 0) {
   throw new Error(
     'Script needs exactly 2 arguments.\n  First: Output file.\n  Second: Folder that contains all log files'
   );
 }
-const [, , outputFile, logFolder] = process.argv;
 
 // Only versions that have a release date in releases.json are kept. The empty version
 // belongs to builds without a version number and is kept as well
@@ -37,10 +37,10 @@ let skipped = 0;
 for (const file of fs.readdirSync(logFolder)) {
   console.log(`Process ${file}`);
   const lines = fs.readFileSync(path.join(logFolder, file), 'utf8').split('\n');
-  for (let i = 0; i < lines.length; i += 1) {
-    if (lines[i].trim().length === 0) continue;
+  for (const [i, text] of lines.entries()) {
+    if (text.trim().length === 0) continue;
 
-    const line = parseLogLine(lines[i]);
+    const line = parseLogLine(text);
     if ('error' in line) {
       console.log(`Skipping ${file}:${i + 1}: ${line.error}`);
       skipped += 1;

@@ -57,7 +57,7 @@ describe('groupByMonth', () => {
       { date: '2024-07', counts: [5, 0], release: null }
     ]);
     // The input is not modified
-    expect(days[0].counts).toEqual([1, 2]);
+    expect(days[0]?.counts).toEqual([1, 2]);
   });
 });
 

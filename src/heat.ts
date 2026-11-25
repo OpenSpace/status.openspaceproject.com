@@ -18,22 +18,21 @@ const IntensityPower = 1 / 4;
  * place with the most starts has an intensity of 1
  */
 export function heatPoints(places: PlaceUsage[], range: MonthRange): HeatPoint[] {
-  const counts = places.map((place) => countInRange(place.byMonth, place.total, range));
+  const counted = places.map((place) => ({
+    place,
+    count: countInRange(place.byMonth, place.total, range)
+  }));
   let max = 0;
-  for (const count of counts) {
+  for (const { count } of counted) {
     if (count > max) max = count;
   }
   if (max === 0) return [];
 
-  const points: HeatPoint[] = [];
-  for (let i = 0; i < places.length; i++) {
-    if (counts[i] > 0) {
-      points.push([
-        places[i].lat,
-        places[i].lng,
-        Math.pow(counts[i] / max, IntensityPower)
-      ]);
-    }
-  }
-  return points;
+  return counted
+    .filter(({ count }) => count > 0)
+    .map(({ place, count }): HeatPoint => [
+      place.lat,
+      place.lng,
+      Math.pow(count / max, IntensityPower)
+    ]);
 }

@@ -82,7 +82,7 @@ export function validateGeolocations(geolocations: Geolocations): {
     // The region can contain commas itself, for example "Washington, D.C."
     const parts = key.split(', ');
     const location = {
-      p: parts[0],
+      p: parts[0] ?? '',
       r: parts.slice(1, -1).join(', '),
       c: parts.at(-1) ?? ''
     };
@@ -98,13 +98,13 @@ export function validateGeolocations(geolocations: Geolocations): {
  * place per line, sorted by the key
  */
 export function formatGeolocations(geolocations: Geolocations): string {
-  const lines = Object.keys(geolocations)
+  const lines = Object.entries(geolocations)
     // Compare by code points so that the order does not depend on the locale
-    .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
-    .map((key) => {
-      const { lat, lng } = geolocations[key];
-      return `  ${JSON.stringify(key)}: { "lat": ${round(lat)}, "lng": ${round(lng)} }`;
-    });
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    .map(
+      ([key, { lat, lng }]) =>
+        `  ${JSON.stringify(key)}: { "lat": ${round(lat)}, "lng": ${round(lng)} }`
+    );
   return `{\n${lines.join(',\n')}\n}\n`;
 }
 

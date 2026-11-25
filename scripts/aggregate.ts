@@ -6,7 +6,7 @@ import type { SparseCounts, UsageFile } from '../src/types.ts';
 
 import { type Geolocations, isValidPlace, placeKey } from './geolocation.ts';
 import { convertCountryCode } from './isocountries.ts';
-import type { LogData } from './logdata.ts';
+import { type LogData, lookup } from './logdata.ts';
 import { isAcceptableLocation } from './logparse.ts';
 
 /**
@@ -95,7 +95,7 @@ export function countedSystem(version: string, system: string): string | undefin
  */
 function toSparse(counter: Counter, keys: Map<string, number>): SparseCounts {
   return [...counter]
-    .map(([key, count]) => [keys.get(key) ?? -1, count])
+    .map(([key, count]): [number, number] => [keys.get(key) ?? -1, count])
     .sort(([a], [b]) => a - b)
     .flat();
 }
@@ -122,7 +122,7 @@ export function aggregate(
   // Country -> Month -> count
   const countries = new Map<string, Counter>();
   // Position -> Month -> count. Different spellings of a place have the same position
-  const places = new Map<string, Counter>();
+  const places = new Map<string, { lat: number; lng: number; months: Counter }>();
   // Day -> Version -> count
   const days = new Map<string, Counter>();
   // Version -> Profile -> count
@@ -132,10 +132,10 @@ export function aggregate(
   const missing = new Set<string>();
 
   for (const entry of data.entries) {
-    const version = data.versions[entry.v];
-    const location = data.locations[entry.l];
-    const profile = data.profiles[entry.p];
-    const system = countedSystem(version, data.systems[entry.s]);
+    const version = lookup(data.versions, entry.v);
+    const location = lookup(data.locations, entry.l);
+    const profile = lookup(data.profiles, entry.p);
+    const system = countedSystem(version, lookup(data.systems, entry.s));
     if (!isAcceptableLocation(location.p, location.r, location.c)) continue;
 
     const date = toFullYear(entry.d);
@@ -146,11 +146,14 @@ export function aggregate(
       const place = placeKey(location);
       const position = geolocations[place];
       if (position !== undefined) {
-        const key = `${position.lat.toFixed(PositionPrecision)},${position.lng.toFixed(PositionPrecision)}`;
-        increaseCount(
-          getOrCreate(places, key, () => new Map()),
-          month
-        );
+        const lat = position.lat.toFixed(PositionPrecision);
+        const lng = position.lng.toFixed(PositionPrecision);
+        const counts = getOrCreate(places, `${lat},${lng}`, () => ({
+          lat: Number(lat),
+          lng: Number(lng),
+          months: new Map()
+        }));
+        increaseCount(counts.months, month);
       } else {
         missing.add(place);
       }
@@ -211,17 +214,18 @@ export function aggregate(
       })),
     places: [...places]
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([key, byMonth]) => {
-        const [lat, lng] = key.split(',').map(Number);
-        return { lat, lng, months: toSparse(byMonth, monthIndices) };
-      }),
+      .map(([, { lat, lng, months: byMonth }]) => ({
+        lat,
+        lng,
+        months: toSparse(byMonth, monthIndices)
+      })),
     days: sortedDays.map((date) => ({
       date,
       versions: toSparse(days.get(date) ?? new Map(), versionIndices)
     })),
     releases: Object.fromEntries(
       Object.entries(releases)
-        .map(([date, version]) => [toFullYear(date), version])
+        .map(([date, version]): [string, string] => [toFullYear(date), version])
         .filter(([date, version]) => days.has(date) && !isPrerelease(version))
     ),
     profiles: perVersion(profiles),

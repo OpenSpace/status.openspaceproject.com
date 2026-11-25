@@ -37,9 +37,9 @@ describe('heatPoints', () => {
       place(5, 6, { '2024-01': 10 })
     ];
     const points = heatPoints(places, Open);
-    expect(points[1][2]).toBe(1);
-    expect(points[0][2]).toBeCloseTo(Math.pow(1 / 100, 1 / 4));
-    expect(points[2][2]).toBeCloseTo(Math.pow(10 / 100, 1 / 4));
+    expect(points[1]?.[2]).toBe(1);
+    expect(points[0]?.[2]).toBeCloseTo(Math.pow(1 / 100, 1 / 4));
+    expect(points[2]?.[2]).toBeCloseTo(Math.pow(10 / 100, 1 / 4));
   });
 
   it('keeps the order of the places', () => {

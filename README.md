@@ -26,11 +26,11 @@ example because two lines were written on top of each other, are skipped and rep
 Before `npm run dev` and `npm run build`, `npm run generate` (`scripts/generate-data.ts`)
 creates two files in `src/generated` that the page loads:
 
-- `usage.json`: The raw data aggregated into a compact form. As the raw file is large but
-  changes only rarely, it is cached in the `.cache` folder and only downloaded again when
-  the server reports that it has changed.
-- `world.json`: The country outlines for the country map, created from the
-  [Natural Earth](https://www.naturalearthdata.com) data of the `world-atlas` package.
+  - `usage.json`: The raw data aggregated into a compact form. As the raw file is large but
+    changes only rarely, it is cached in the `.cache` folder and only downloaded again when
+    the server reports that it has changed.
+  - `world.json`: The country outlines for the country map, created from the
+    [Natural Earth](https://www.naturalearthdata.com) data of the `world-atlas` package.
 
 Both are emitted with a content hash in their name, so browsers can keep them cached until
 the data actually changes. `node scripts/json_to_csv.ts [file]` converts the raw data
